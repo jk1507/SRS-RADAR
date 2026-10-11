@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: srs_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-srs_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-srs_password}
+      POSTGRES_DB: ${POSTGRES_DB:-srs_radar}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U srs_user -d srs_radar"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: srs_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: srs_minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_password}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: srs_backend_api
+    restart: always
+    environment:
+      - PROFILE=${PROFILE:-local-free}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-srs_user}:${POSTGRES_PASSWORD:-srs_password}@postgres:5432/${POSTGRES_DB:-srs_radar}
+      - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - MODEL_FAST=${MODEL_FAST:-qwen2.5:7b-instruct}
+      - MODEL_REASONING=${MODEL_REASONING:-qwen2.5:7b-instruct}
+      - JWT_SECRET=${JWT_SECRET:-change-this-super-secret-jwt-key-in-production-32bytes}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: srs_backend_worker
+    restart: always
+    command: python -m app.workers.worker
+    environment:
+      - PROFILE=${PROFILE:-local-free}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-srs_user}:${POSTGRES_PASSWORD:-srs_password}@postgres:5432/${POSTGRES_DB:-srs_radar}
+      - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  minio_data:

@@ -1,0 +1,1783 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Requirement Radar",
+    "description": "Software Requirements Intelligence and Quality Assurance Platform API",
+    "version": "2.4.0-audit"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health & Meta"
+        ],
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ai": {
+      "get": {
+        "tags": [
+          "Health & Meta"
+        ],
+        "summary": "Ai Health Check",
+        "operationId": "ai_health_check_health_ai_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AIHealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meta": {
+      "get": {
+        "tags": [
+          "Health & Meta"
+        ],
+        "summary": "Get Meta",
+        "operationId": "get_meta_meta_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Check",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/ai": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Ai Health Check",
+        "operationId": "ai_health_check_api_v1_health_ai_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AIHealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meta": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Get Meta",
+        "operationId": "get_meta_api_v1_meta_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "List Projects",
+        "description": "List all specifications/projects enrolled in Requirement Radar.",
+        "operationId": "list_projects_api_v1_projects_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Projects Api V1 Projects Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Create Project",
+        "description": "Enroll a new specification/project.",
+        "operationId": "create_project_api_v1_projects_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Get Project",
+        "description": "Get project details by ID.",
+        "operationId": "get_project_api_v1_projects__project_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/summary": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Get Dashboard Summary",
+        "description": "Get executive dashboard aggregated KPIs and statistics.",
+        "operationId": "get_dashboard_summary_api_v1_dashboard_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requirements": {
+      "get": {
+        "tags": [
+          "Requirements"
+        ],
+        "summary": "List Requirements",
+        "description": "List requirements with optional project, type, and status filters.",
+        "operationId": "list_requirements_api_v1_requirements_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RequirementResponse"
+                  },
+                  "title": "Response List Requirements Api V1 Requirements Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requirements/{requirement_id}": {
+      "get": {
+        "tags": [
+          "Requirements"
+        ],
+        "summary": "Get Requirement",
+        "description": "Get single requirement by ID.",
+        "operationId": "get_requirement_api_v1_requirements__requirement_id__get",
+        "parameters": [
+          {
+            "name": "requirement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Requirement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequirementResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requirements/{requirement_id}/impact": {
+      "get": {
+        "tags": [
+          "Requirements"
+        ],
+        "summary": "Get Requirement Change Impact",
+        "description": "Compute change impact set for a requirement up to depth N.",
+        "operationId": "get_requirement_change_impact_api_v1_requirements__requirement_id__impact_get",
+        "parameters": [
+          {
+            "name": "requirement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Requirement Id"
+            }
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5,
+              "minimum": 1,
+              "default": 2,
+              "title": "Depth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requirements/{requirement_id}/rewrite": {
+      "post": {
+        "tags": [
+          "Requirements"
+        ],
+        "summary": "Apply Requirement Rewrite",
+        "description": "Apply SpecSentinel AI suggested rewrite to a requirement.",
+        "operationId": "apply_requirement_rewrite_api_v1_requirements__requirement_id__rewrite_post",
+        "parameters": [
+          {
+            "name": "requirement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Requirement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequirementResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/issues": {
+      "get": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "List Issues",
+        "description": "List issues and contradictions detected in requirements.",
+        "operationId": "list_issues_api_v1_issues_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Severity"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IssueResponse"
+                  },
+                  "title": "Response List Issues Api V1 Issues Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/issues/{issue_id}": {
+      "get": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Get Issue",
+        "description": "Get issue detail by ID.",
+        "operationId": "get_issue_api_v1_issues__issue_id__get",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Issue Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/issues/{issue_id}/resolve": {
+      "post": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Resolve Issue",
+        "description": "Mark an issue as resolved using AI harmonization proposal.",
+        "operationId": "resolve_issue_api_v1_issues__issue_id__resolve_post",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Issue Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/{run_id}": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Get Analysis Run",
+        "description": "Get active analysis run telemetry and progress.",
+        "operationId": "get_analysis_run_api_v1_analysis__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/upload": {
+      "post": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Upload Document And Start Analysis",
+        "description": "Upload SRS document and initiate automated analysis pipeline.",
+        "operationId": "upload_document_and_start_analysis_api_v1_analysis_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_document_and_start_analysis_api_v1_analysis_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/stream": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Event Stream",
+        "description": "Server-Sent Events (SSE) organization-level ingestion stream.",
+        "operationId": "event_stream_api_v1_events_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/traceability": {
+      "get": {
+        "tags": [
+          "Traceability"
+        ],
+        "summary": "Get Traceability Matrix",
+        "description": "Get requirement traceability matrix (Requirements vs Arch/Test/Compliance).",
+        "operationId": "get_traceability_matrix_api_v1_traceability_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Get Traceability Matrix Api V1 Traceability Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/traceability/graph": {
+      "get": {
+        "tags": [
+          "Traceability"
+        ],
+        "summary": "Get Traceability Graph",
+        "description": "Get typed relationship dependency graph nodes and edges.",
+        "operationId": "get_traceability_graph_api_v1_traceability_graph_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Traceability Graph Api V1 Traceability Graph Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/traceability/import/{target_type}": {
+      "post": {
+        "tags": [
+          "Traceability"
+        ],
+        "summary": "Import Traceability Targets",
+        "description": "Import architecture components, test cases, or compliance items via CSV/JSON.",
+        "operationId": "import_traceability_targets_api_v1_traceability_import__target_type__post",
+        "parameters": [
+          {
+            "name": "target_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Target Type"
+            }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_traceability_targets_api_v1_traceability_import__target_type__post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recommendations/{recommendation_id}/feedback": {
+      "post": {
+        "tags": [
+          "Recommendations"
+        ],
+        "summary": "Submit Recommendation Feedback",
+        "description": "Store human feedback on AI recommendation (Accept / Edit / Reject).",
+        "operationId": "submit_recommendation_feedback_api_v1_recommendations__recommendation_id__feedback_post",
+        "parameters": [
+          {
+            "name": "recommendation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recommendation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AIHealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "fast_model": {
+            "type": "string",
+            "title": "Fast Model"
+          },
+          "reasoning_model": {
+            "type": "string",
+            "title": "Reasoning Model"
+          },
+          "ollama_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ollama Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "provider",
+          "fast_model",
+          "reasoning_model"
+        ],
+        "title": "AIHealthResponse"
+      },
+      "AnalysisRunResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "document_filename": {
+            "type": "string",
+            "title": "Document Filename"
+          },
+          "document_size_bytes": {
+            "type": "integer",
+            "title": "Document Size Bytes"
+          },
+          "document_sha256": {
+            "type": "string",
+            "title": "Document Sha256"
+          },
+          "context_standard": {
+            "type": "string",
+            "title": "Context Standard"
+          },
+          "analysis_mode": {
+            "type": "string",
+            "title": "Analysis Mode"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "current_stage": {
+            "type": "string",
+            "title": "Current Stage"
+          },
+          "progress_percentage": {
+            "type": "number",
+            "title": "Progress Percentage"
+          },
+          "total_requirements": {
+            "type": "integer",
+            "title": "Total Requirements"
+          },
+          "processed_requirements": {
+            "type": "integer",
+            "title": "Processed Requirements"
+          },
+          "throughput_req_per_sec": {
+            "type": "number",
+            "title": "Throughput Req Per Sec"
+          },
+          "elapsed_seconds": {
+            "type": "integer",
+            "title": "Elapsed Seconds"
+          },
+          "eta_seconds": {
+            "type": "integer",
+            "title": "Eta Seconds"
+          },
+          "logs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Logs"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "document_filename",
+          "document_size_bytes",
+          "document_sha256",
+          "context_standard",
+          "analysis_mode",
+          "status",
+          "current_stage",
+          "progress_percentage",
+          "total_requirements",
+          "processed_requirements",
+          "throughput_req_per_sec",
+          "elapsed_seconds",
+          "eta_seconds",
+          "logs",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AnalysisRunResponse"
+      },
+      "Body_import_traceability_targets_api_v1_traceability_import__target_type__post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_traceability_targets_api_v1_traceability_import__target_type__post"
+      },
+      "Body_upload_document_and_start_analysis_api_v1_analysis_upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_document_and_start_analysis_api_v1_analysis_upload_post"
+      },
+      "DashboardSummaryResponse": {
+        "properties": {
+          "active_projects_count": {
+            "type": "integer",
+            "title": "Active Projects Count",
+            "example": 3
+          },
+          "analyzing_projects_count": {
+            "type": "integer",
+            "title": "Analyzing Projects Count",
+            "example": 1
+          },
+          "overall_quality_score": {
+            "type": "number",
+            "title": "Overall Quality Score",
+            "example": 83.3
+          },
+          "quality_trend_percentage": {
+            "type": "number",
+            "title": "Quality Trend Percentage",
+            "example": 5.4
+          },
+          "open_issues_count": {
+            "type": "integer",
+            "title": "Open Issues Count",
+            "example": 18
+          },
+          "open_issues_by_severity": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Open Issues By Severity",
+            "example": {
+              "critical": 3,
+              "high": 7,
+              "low": 0,
+              "medium": 8
+            }
+          },
+          "total_requirements_count": {
+            "type": "integer",
+            "title": "Total Requirements Count",
+            "example": 248
+          },
+          "domains_count": {
+            "type": "integer",
+            "title": "Domains Count",
+            "example": 3
+          }
+        },
+        "type": "object",
+        "required": [
+          "active_projects_count",
+          "analyzing_projects_count",
+          "overall_quality_score",
+          "quality_trend_percentage",
+          "open_issues_count",
+          "open_issues_by_severity",
+          "total_requirements_count",
+          "domains_count"
+        ],
+        "title": "DashboardSummaryResponse"
+      },
+      "FeedbackPayload": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "title": "Decision",
+            "example": "accept"
+          },
+          "edited_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited Text"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code",
+            "example": "wrong_finding"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "title": "FeedbackPayload"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "database": {
+            "type": "string",
+            "title": "Database"
+          },
+          "redis": {
+            "type": "string",
+            "title": "Redis"
+          },
+          "profile": {
+            "type": "string",
+            "title": "Profile"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "database",
+          "redis",
+          "profile"
+        ],
+        "title": "HealthResponse"
+      },
+      "IssueResponse": {
+        "properties": {
+          "issue_id_str": {
+            "type": "string",
+            "title": "Issue Id Str",
+            "example": "ISS-001"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "example": "Contradictory Session Auto-Lock Timeouts"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "default": "Critical",
+            "example": "Critical"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": "Contradiction",
+            "example": "Contradiction"
+          },
+          "affected_req_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Req Ids",
+            "example": [
+              "REQ-031",
+              "REQ-042"
+            ]
+          },
+          "root_cause": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root Cause"
+          },
+          "evidence_json": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Evidence Json"
+          },
+          "ai_recommendation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Recommendation"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "open",
+            "example": "open"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "issue_id_str",
+          "title",
+          "id",
+          "project_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "IssueResponse"
+      },
+      "MetaResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "profile": {
+            "type": "string",
+            "title": "Profile"
+          },
+          "target_engine": {
+            "type": "string",
+            "title": "Target Engine"
+          },
+          "standard_context": {
+            "type": "string",
+            "title": "Standard Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "profile",
+          "target_engine",
+          "standard_context"
+        ],
+        "title": "MetaResponse"
+      },
+      "ProjectCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "example": "Smart Hospital Core SRS"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "default": "v1.0",
+            "example": "v1.3"
+          },
+          "domain": {
+            "type": "string",
+            "title": "Domain",
+            "default": "Medical / Healthcare",
+            "example": "Medical / Healthcare"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "example": "Electronic Health Records & IoT telemetry intake specification."
+          },
+          "lint_mode": {
+            "type": "string",
+            "title": "Lint Mode",
+            "default": "Strict INCOSE",
+            "example": "Strict INCOSE"
+          },
+          "retention_mode": {
+            "type": "string",
+            "title": "Retention Mode",
+            "default": "standard",
+            "example": "zero_retention"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ProjectCreate"
+      },
+      "ProjectResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "example": "Smart Hospital Core SRS"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "default": "v1.0",
+            "example": "v1.3"
+          },
+          "domain": {
+            "type": "string",
+            "title": "Domain",
+            "default": "Medical / Healthcare",
+            "example": "Medical / Healthcare"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "example": "Electronic Health Records & IoT telemetry intake specification."
+          },
+          "lint_mode": {
+            "type": "string",
+            "title": "Lint Mode",
+            "default": "Strict INCOSE",
+            "example": "Strict INCOSE"
+          },
+          "retention_mode": {
+            "type": "string",
+            "title": "Retention Mode",
+            "default": "standard",
+            "example": "zero_retention"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "example": "analyzed"
+          },
+          "quality_score": {
+            "type": "number",
+            "title": "Quality Score",
+            "example": 83.3
+          },
+          "open_ambiguities_count": {
+            "type": "integer",
+            "title": "Open Ambiguities Count",
+            "example": 18
+          },
+          "parsed_requirements_count": {
+            "type": "integer",
+            "title": "Parsed Requirements Count",
+            "example": 248
+          },
+          "document_filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Filename",
+            "example": "Smart-Hospital-SRS-v1.3.pdf"
+          },
+          "document_size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Size Bytes",
+            "example": 2516582
+          },
+          "document_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Sha256",
+            "example": "9e2f4a1c0d8b7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f"
+          },
+          "last_analyzed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Analyzed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id",
+          "status",
+          "quality_score",
+          "open_ambiguities_count",
+          "parsed_requirements_count",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ProjectResponse"
+      },
+      "RequirementResponse": {
+        "properties": {
+          "req_id_str": {
+            "type": "string",
+            "title": "Req Id Str",
+            "example": "REQ-024"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "default": "Functional",
+            "example": "Functional"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": "General",
+            "example": "Data Ingestion"
+          },
+          "clause_text": {
+            "type": "string",
+            "title": "Clause Text",
+            "example": "The system should ideally process medical telemetry packets rapidly."
+          },
+          "clarity_score": {
+            "type": "number",
+            "title": "Clarity Score",
+            "default": 100.0,
+            "example": 42.0
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "flagged",
+            "example": "flagged"
+          },
+          "rule_violations": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rule Violations"
+          },
+          "ai_recommendation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Recommendation",
+            "example": "The system SHALL process medical telemetry packets within 250ms."
+          },
+          "score_boost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Boost",
+            "example": 50.0
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "req_id_str",
+          "clause_text",
+          "id",
+          "project_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "RequirementResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

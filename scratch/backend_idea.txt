@@ -1,0 +1,1404 @@
+1. What your final system should actually do
+Your current frontend shows things like:
+REQ-024
+"The system should provide fast response for emergency medical
+image rendering and patient vitals telemetry."
+
+↓
+AI Analysis
+
+Clarity Score: 42/100
+Ambiguous
+Missing measurable SLA
+Suggested Rewrite:
+"The system shall render 95% of DICOM emergency medical images
+within 200 milliseconds under a concurrent load of 50 sessions."
+The real backend should actually perform this analysis.
+The flow should be:
+                    ┌──────────────────────┐
+                    │      User Uploads    │
+                    │       SRS PDF/DOCX   │
+                    └──────────┬───────────┘
+                               ↓
+                    ┌──────────────────────┐
+                    │ Document Processing  │
+                    │ PDF/DOCX extraction  │
+                    └──────────┬───────────┘
+                               ↓
+                    ┌──────────────────────┐
+                    │ Requirement          │
+                    │ Segmentation         │
+                    └──────────┬───────────┘
+                               ↓
+             ┌─────────────────┼──────────────────┐
+             ↓                 ↓                  ↓
+       LLM Analysis       Embeddings         Rule Engine
+             ↓                 ↓                  ↓
+             └─────────────────┼──────────────────┘
+                               ↓
+                    ┌──────────────────────┐
+                    │ Semantic Reasoning   │
+                    │ Conflict Detection   │
+                    │ Testability Analysis │
+                    └──────────┬───────────┘
+                               ↓
+                    ┌──────────────────────┐
+                    │ Traceability Engine  │
+                    └──────────┬───────────┘
+                               ↓
+                    ┌──────────────────────┐
+                    │ PostgreSQL + Vector  │
+                    │ DB / pgvector        │
+                    └──────────┬───────────┘
+                               ↓
+                    ┌──────────────────────┐
+                    │       REST API       │
+                    └──────────┬───────────┘
+                               ↓
+                    ┌──────────────────────┐
+                    │ Next.js Dashboard    │
+                    └──────────────────────┘
+
+2. Recommended complete technology stack
+For your project, I would use:
+
+Layer
+Technology
+Frontend
+Next.js + TypeScript
+UI
+Tailwind CSS
+Components
+shadcn/ui
+Charts
+Recharts
+Backend API
+FastAPI / Python
+AI orchestration
+LangGraph
+LLM
+OpenAI GPT models
+Embeddings
+OpenAI text-embedding-3-large / smaller embedding model
+Document parsing
+PyMuPDF + python-docx / Unstructured
+Vector DB
+PostgreSQL + pgvector
+Relational DB
+PostgreSQL
+Semantic search
+pgvector
+Full-text search
+PostgreSQL FTS
+Reranking
+Cross-encoder / LLM reranker
+Rules
+Python rule engine
+Standards
+INCOSE / ISO/IEC/IEEE 29148 rule definitions
+Graph
+PostgreSQL graph tables initially
+Background jobs
+Celery / Redis or a queue
+Cache
+Redis
+Authentication
+Auth.js / Clerk / custom JWT
+File storage
+S3-compatible storage
+Observability
+OpenTelemetry + MLflow
+Deployment
+Vercel + Render/Railway/AWS
+CI/CD
+GitHub Actions
+LangGraph is particularly useful here because your analysis is naturally a workflow of discrete AI, data, validation, and human-review nodes, rather than one giant LLM prompt. Its documentation explicitly describes building workflows from nodes and shared state. Docs by LangChain
+
+3. Why I recommend Python for the AI backend
+Your frontend can remain:
+Next.js
+TypeScript
+Tailwind
+But don't put the entire AI pipeline inside Next.js.
+Use:
+Next.js
+   ↓
+FastAPI
+   ↓
+AI/ML services
+Why?
+Python gives you a much better ecosystem for:
+NLP
+embeddings
+document processing
+machine learning
+evaluation
+vector search
+LangGraph
+LLM experimentation
+data processing
+So your architecture becomes:
+frontend/
+    Next.js
+
+backend/
+    FastAPI
+
+ai-engine/
+    LangGraph
+    LLM
+    embeddings
+    analyzers
+
+database/
+    PostgreSQL
+    pgvector
+
+4. Most important: DON'T make the system keyword-based
+This is the biggest change from your current prototype.
+Suppose the SRS contains:
+Requirement A
+The system should respond quickly when a doctor opens a patient's medical image.
+A keyword system sees:
+"quickly"
+and says:
+AMBIGUOUS
+That's weak.
+Your system should understand:
+Actor:
+Doctor
+
+Action:
+Open medical image
+
+System behavior:
+Display image
+
+Performance constraint:
+Unspecified
+
+Measurable threshold:
+Missing
+
+Condition:
+Patient image access
+
+Potential quality issue:
+Performance requirement not objectively testable
+That is semantic requirement analysis.
+
+5. Requirement understanding using LLM
+For every requirement, send structured context to the LLM.
+For example:
+{
+  "requirement_id": "REQ-024",
+  "section": "2.1 Diagnostic Latency",
+  "text": "The system should provide fast response for emergency medical image rendering.",
+  "document_context": "...",
+  "neighboring_requirements": [
+    "REQ-023 ...",
+    "REQ-025 ..."
+  ]
+}
+The LLM should return structured information such as:
+{
+  "requirement_type": "non_functional",
+  "category": "performance",
+
+  "actor": "doctor",
+
+  "action": "render emergency medical image",
+
+  "condition": "emergency diagnostic workflow",
+
+  "constraints": [],
+
+  "measurable": false,
+
+  "ambiguities": [
+    {
+      "phrase": "fast response",
+      "reason": "No measurable latency threshold"
+    }
+  ],
+
+  "missing_information": [
+    "maximum response time",
+    "concurrent user load"
+  ],
+
+  "testability_score": 42,
+
+  "confidence": 0.94
+}
+This is where your LLM actually becomes useful.
+OpenAI's API supports structured JSON-schema outputs, which is exactly what you want for turning free-form SRS text into predictable analysis objects rather than parsing arbitrary prose. OpenAI Platform
+
+6. Use embeddings for semantic understanding
+This is another major component.
+You take:
+REQ-024
+"The system should render emergency medical images quickly."
+and generate an embedding:
+[0.0123, -0.0912, 0.8832, ...]
+You store it in PostgreSQL + pgvector.
+Then:
+REQ-024
+       ↓
+Embedding
+       ↓
+Vector Search
+       ↓
+Find semantically related requirements
+For example:
+REQ-024
+Emergency image rendering
+
+matches:
+
+REQ-061
+Diagnostic image processing must complete within 250 ms.
+
+REQ-077
+Patient telemetry visualization must not exceed 500 ms latency.
+
+REQ-089
+Emergency clinical interfaces must remain responsive during
+high patient load.
+A keyword search may miss these relationships.
+Embeddings can surface them based on semantic similarity.
+PostgreSQL's pgvector supports vector similarity search, cosine distance, HNSW and IVFFlat indexes, and can also be combined with PostgreSQL full-text search for hybrid retrieval. GitHub
+
+7. But embeddings alone aren't enough
+This is extremely important.
+You should NOT do:
+similarity > 0.8
+        ↓
+CONFLICT
+That would be another simplistic system.
+Instead:
+Embedding similarity
+        ↓
+Candidate relationship
+        ↓
+LLM semantic comparison
+        ↓
+Constraint extraction
+        ↓
+Logical comparison
+        ↓
+Conflict confidence
+Example:
+REQ-031
+The system shall automatically lock clinician terminals after exactly 15 minutes of inactivity.
+REQ-042
+Users shall remain logged in for at least 30 minutes without activity.
+Embedding search says:
+Highly related
+Then your reasoning engine extracts:
+REQ-031
+timeout = 15 min
+
+REQ-042
+timeout >= 30 min
+Now the system can determine:
+Constraint contradiction
+That is a real semantic conflict detector.
+
+8. Build a Requirement Knowledge Model
+Every requirement should become structured data.
+Something like:
+Requirement
+│
+├── ID
+├── Document
+├── Section
+├── Text
+├── Type
+├── Category
+├── Actor
+├── System
+├── Action
+├── Object
+├── Condition
+├── Constraint
+├── Metric
+├── Threshold
+├── Priority
+├── Dependencies
+├── Related Requirements
+├── Source Location
+└── Embedding
+For example:
+{
+  "id": "REQ-031",
+  "type": "security",
+  "category": "session_management",
+  "actor": "clinician",
+  "action": "terminate_session",
+  "condition": "15_minutes_inactivity",
+  "constraint": {
+    "operator": "exactly",
+    "value": 15,
+    "unit": "minutes"
+  }
+}
+Now you have something far more powerful than raw text.
+
+9. Your AI pipeline should have multiple agents/nodes
+Don't create:
+ONE AI PROMPT
+        ↓
+ALL RESULTS
+Instead:
+                 SRS
+                  ↓
+           Document Parser
+                  ↓
+        Requirement Extractor
+                  ↓
+       ┌──────────┼──────────┐
+       ↓          ↓          ↓
+   Semantic    Quality    Compliance
+   Analyzer    Analyzer    Analyzer
+       ↓          ↓          ↓
+       └──────────┼──────────┘
+                  ↓
+          Relationship Engine
+                  ↓
+          Conflict Detector
+                  ↓
+         Testability Analyzer
+                  ↓
+          Traceability Engine
+                  ↓
+          Recommendation AI
+                  ↓
+             Final Score
+LangGraph fits this kind of stateful multi-step workflow well; its current documentation describes separate nodes for LLM steps, data steps, actions, human input, routing, retries, and shared workflow state. Docs by LangChain
+
+10. Agent 1 — Requirement Extraction
+Input:
+PDF/DOCX
+Output:
+REQ-001
+REQ-002
+REQ-003
+...
+REQ-084
+It should identify:
+requirement boundaries
+requirement IDs
+section
+title
+statement
+functional/non-functional
+source page
+surrounding context
+This should combine document parsing + LLM rather than blindly asking the LLM to read the entire PDF.
+
+11. Agent 2 — Semantic Analyzer
+For each requirement:
+What does this requirement actually mean?
+It extracts:
+Actor
+Action
+Object
+Condition
+Constraint
+Expected behavior
+Quality attribute
+Dependencies
+Example:
+"The system shall encrypt patient records using AES-256
+before storing them."
+
+Actor:
+System
+
+Action:
+Encrypt
+
+Object:
+Patient records
+
+Algorithm:
+AES-256
+
+Condition:
+Before storage
+
+Category:
+Security
+
+12. Agent 3 — Ambiguity Analyzer
+This is where you move beyond keywords.
+Instead of:
+if "fast" in requirement:
+    ambiguity = True
+you ask:
+Can this requirement be interpreted differently
+by two reasonable engineers/testers?
+The LLM evaluates:
+vague concepts
+missing thresholds
+unclear actors
+unclear conditions
+undefined terminology
+missing scope
+incomplete constraints
+subjective language
+unclear references
+For example:
+The system should provide fast response.
+The system understands:
+Quality attribute:
+Performance
+
+Expected behavior:
+Fast response
+
+Problem:
+No objective threshold
+
+Missing:
+Latency target
+Load condition
+Measurement method
+
+13. Agent 4 — Testability Analyzer
+This is one of the strongest features you can build.
+Ask:
+"Can a QA engineer create a deterministic test from this requirement?"
+Example:
+Bad
+The system should be user-friendly.
+AI:
+NOT TESTABLE
+
+Reason:
+"user-friendly" lacks measurable criteria.
+Then:
+Possible measurable dimensions:
+
+Task completion rate
+Navigation depth
+Error rate
+Accessibility compliance
+Response time
+User success rate
+AI suggestion:
+90% of first-time users shall complete patient appointment booking within 2 minutes without assistance.
+Now your system isn't just detecting a problem.
+It is improving the requirement.
+
+14. Agent 5 — Conflict Detection
+This is where your project can become genuinely impressive.
+Don't compare every requirement with every other requirement.
+If you have:
+10,000 requirements
+doing:
+10,000 × 10,000
+would be huge.
+Instead:
+Requirement
+    ↓
+Embedding
+    ↓
+Top 20 semantic neighbors
+    ↓
+Constraint extraction
+    ↓
+Candidate conflicts
+    ↓
+LLM verification
+So:
+REQ-031
+   ↓
+Vector search
+   ↓
+REQ-042
+REQ-051
+REQ-077
+REQ-081
+   ↓
+Semantic comparison
+   ↓
+Potential conflict
+
+15. Conflict types
+You shouldn't only detect "contradiction."
+Create multiple relationship types:
+CONFLICT
+DEPENDENCY
+DUPLICATE
+REFINEMENT
+OVERLAP
+CONSTRAINT
+SUPPORT
+DERIVED_FROM
+TRACEABILITY
+Example:
+REQ-001 ───── DEPENDS_ON ───→ REQ-002
+
+REQ-031 ───── CONFLICTS ─────→ REQ-042
+
+REQ-024 ───── REFINED_BY ────→ REQ-061
+
+REQ-055 ───── IMPLEMENTED_BY → ARCH-004
+This becomes your Requirement Knowledge Graph.
+
+16. Requirement Knowledge Graph
+This is an excellent feature for your Traceability page.
+Conceptually:
+                  ┌───────────────┐
+                  │   REQ-024     │
+                  │ Diagnostic    │
+                  │ Latency       │
+                  └───────┬───────┘
+                          │
+                 RELATED_TO
+                          │
+             ┌────────────┴────────────┐
+             ↓                         ↓
+       ┌─────────────┐          ┌─────────────┐
+       │ TEST-VAL-89 │          │ ARCH-SYS-04 │
+       └─────────────┘          └─────────────┘
+             │
+             │
+             ↓
+       ┌─────────────┐
+       │ TEST CASE   │
+       └─────────────┘
+Your frontend's Traceability Matrix can then become a visualization of real relationships.
+
+17. RAG — Retrieval Augmented Generation
+You should also use RAG.
+Your AI shouldn't analyze a requirement in isolation.
+For example:
+REQ-024
+The system retrieves:
+REQ-023
+REQ-025
+REQ-031
+REQ-042
+relevant definitions
+relevant standards
+related architecture
+related test cases
+Then gives those to the LLM.
+So:
+Question
+   ↓
+Retriever
+   ↓
+Relevant context
+   ↓
+LLM
+   ↓
+Grounded answer
+LangChain's current documentation includes semantic search and RAG workflows, while LangGraph can be used when you need more control over the workflow. Docs by LangChain
+
+18. Hybrid retrieval
+I strongly recommend:
+Semantic Search
+       +
+Keyword Search
+       +
+Metadata Filtering
+       +
+Reranking
+Not:
+keyword search only
+Example query:
+Find requirements related to session expiration.
+Keyword search finds:
+"session"
+"expiration"
+Semantic search can also find:
+"automatically lock clinician terminals"
+"remain logged in without activity"
+"idle timeout"
+"authentication inactivity policy"
+Then combine results.
+pgvector itself documents combining vector search with PostgreSQL full-text search and approaches such as Reciprocal Rank Fusion or a cross-encoder for hybrid retrieval. GitHub
+
+19. Standards/rules engine
+This part should not be delegated entirely to the LLM.
+For example:
+INCOSE / ISO/IEC/IEEE 29148
+Create machine-readable rules.
+Example:
+{
+  "rule_id": "REQ-QUALITY-001",
+  "name": "Mandatory Requirement Language",
+  "description": "Requirement should use mandatory language",
+  "severity": "medium"
+}
+Another:
+{
+  "rule_id": "REQ-TEST-004",
+  "name": "Measurable Performance",
+  "condition": "performance requirement",
+  "required_fields": [
+    "metric",
+    "threshold",
+    "condition"
+  ]
+}
+Then:
+LLM interpretation
+        +
+deterministic rule validation
+This gives you much stronger results.
+
+20. The Quality Score
+Your current UI shows:
+83.3 / 100
+Eventually that should be calculated.
+For example:
+Quality Score =
+    20% Clarity
+  + 20% Testability
+  + 15% Consistency
+  + 15% Completeness
+  + 10% Traceability
+  + 10% Standards Compliance
+  + 10% Unambiguity
+Example:
+Clarity           87
+Testability       72
+Consistency       91
+Completeness      78
+Traceability      82
+Compliance        95
+Unambiguity       69
+Then:
+Final = 81.7 / 100
+You can later make the weights configurable.
+
+21. Don't let the LLM invent the score
+This is important.
+Bad:
+LLM:
+"I think this requirement deserves 83."
+Better:
+Rules
+    ↓
+Evidence
+    ↓
+Individual scores
+    ↓
+Deterministic aggregation
+    ↓
+83.3
+The LLM provides:
+analysis
+reason
+evidence
+confidence
+Your backend calculates:
+score
+severity
+status
+This makes your application much more explainable.
+
+22. Every AI finding should have evidence
+Your Issues page should eventually show:
+REQ-024
+──────────────
+
+Issue:
+Unverifiable response latency
+
+Evidence:
+"fast response"
+
+Why:
+No measurable latency threshold.
+
+Expected:
+Maximum response time
+
+Confidence:
+94%
+
+Source:
+Page 12
+Section 2.1
+This is much better than:
+AI says this is ambiguous.
+
+23. AI rewrite system
+When user clicks:
+Apply Fix
+don't immediately overwrite the original.
+Instead:
+Original Requirement
+        ↓
+AI Rewrite
+        ↓
+Human Review
+        ↓
+Accept / Reject
+        ↓
+New Requirement Version
+Example:
+Original
+The system should provide fast response.
+AI proposal
+The system shall return the diagnostic image rendering response within 200 ms for at least 95% of requests under a concurrent load of 50 active clinician sessions.
+Then show:
+Original
+vs
+Suggested
+with a diff.
+
+24. Human-in-the-loop
+For a serious SRS tool, AI should recommend, not silently modify requirements.
+Use:
+AI detects
+     ↓
+AI explains
+     ↓
+AI proposes fix
+     ↓
+Human approves
+     ↓
+System commits
+This is especially important because requirements can have business/legal/safety implications.
+
+25. LLM model strategy
+You don't need one giant expensive model for everything.
+Use a tiered architecture:
+                ┌───────────────┐
+                │ Simple tasks  │
+                │ Small/fast LLM│
+                └───────┬───────┘
+                        │
+                Classification
+                extraction
+                formatting
+                        │
+                        ↓
+                ┌───────────────┐
+                │ Stronger LLM  │
+                └───────┬───────┘
+                        │
+             Conflict reasoning
+             rewrite generation
+             difficult analysis
+OpenAI's current API exposes multiple model tiers, including frontier, mini, nano, reasoning, and embedding models, so you can choose based on task complexity/cost rather than sending every request to the largest model. OpenAI Platform
+
+26. Database design
+I would use PostgreSQL.
+Tables:
+users
+projects
+documents
+document_sections
+requirements
+requirement_versions
+requirement_embeddings
+requirement_relationships
+issues
+issue_evidence
+analysis_runs
+analysis_results
+rules
+rule_violations
+traceability_links
+test_cases
+architecture_components
+ai_recommendations
+audit_logs
+For example:
+requirements
+id
+project_id
+requirement_code
+section
+text
+type
+category
+priority
+source_page
+created_at
+updated_at
+requirement_analysis
+requirement_id
+clarity_score
+testability_score
+completeness_score
+ambiguity_score
+confidence
+analysis_json
+requirement_relationships
+source_requirement
+target_requirement
+relationship_type
+confidence
+evidence
+
+27. Vector database
+Don't necessarily add a separate vector database initially.
+Use:
+PostgreSQL
++
+pgvector
+That lets you store:
+Requirement
++
+metadata
++
+embedding
++
+relationships
+in one ecosystem.
+pgvector supports exact and approximate nearest-neighbor search and HNSW/IVFFlat indexing. GitHub
+
+28. Document processing
+Your upload pipeline:
+PDF/DOCX
+   ↓
+File validation
+   ↓
+Text extraction
+   ↓
+Layout/section detection
+   ↓
+Page mapping
+   ↓
+Chunking
+   ↓
+Requirement segmentation
+For PDFs:
+PyMuPDF
+For DOCX:
+python-docx
+For more complex documents:
+Unstructured
+You want to preserve:
+page number
+section
+heading
+paragraph
+table
+source location
+because later your AI finding needs to say:
+This problem was found on page 12.
+
+29. RAG architecture
+Your knowledge base can contain:
+Uploaded SRS
+       +
+Previous SRS versions
+       +
+Requirement definitions
+       +
+Organization standards
+       +
+INCOSE rules
+       +
+ISO/IEC/IEEE 29148 guidance
+       +
+Architecture documents
+       +
+Test specifications
+Then:
+User/AI question
+       ↓
+Retriever
+       ↓
+Relevant chunks
+       ↓
+Reranker
+       ↓
+LLM
+       ↓
+Grounded result
+
+30. LangGraph workflow
+I would make the main pipeline approximately:
+START
+  │
+  ↓
+INGEST_DOCUMENT
+  │
+  ↓
+EXTRACT_STRUCTURE
+  │
+  ↓
+EXTRACT_REQUIREMENTS
+  │
+  ↓
+NORMALIZE_REQUIREMENTS
+  │
+  ├─────────────┐
+  ↓             ↓
+SEMANTIC      RULE
+ANALYSIS      ANALYSIS
+  │             │
+  └──────┬──────┘
+         ↓
+EMBED_REQUIREMENTS
+         ↓
+RETRIEVE_RELATED
+         ↓
+RELATIONSHIP_ANALYSIS
+         ↓
+CONFLICT_ANALYSIS
+         ↓
+TESTABILITY_ANALYSIS
+         ↓
+TRACEABILITY_ANALYSIS
+         ↓
+QUALITY_SCORING
+         ↓
+RECOMMENDATIONS
+         ↓
+HUMAN_REVIEW
+         ↓
+STORE_RESULTS
+         ↓
+END
+This is much better than building one massive analyzeSRS() function.
+
+31. Real-time frontend
+Your current UI has:
+LIVE SCAN RUNNING
+98%
+82 / 84 REQ
+9.3 req/s
+These should eventually come from the backend.
+For example:
+FastAPI
+    ↓
+Redis / job queue
+    ↓
+LangGraph worker
+    ↓
+Progress events
+    ↓
+WebSocket / SSE
+    ↓
+Next.js
+Frontend receives:
+{
+  "stage": "conflict_analysis",
+  "processed": 82,
+  "total": 84,
+  "percentage": 97.6
+}
+Then your UI actually updates.
+
+32. API structure
+Your Next.js frontend could call:
+POST /api/projects
+POST /api/documents/upload
+
+GET /api/projects
+GET /api/projects/:id
+
+POST /api/projects/:id/analyze
+
+GET /api/analysis/:id/status
+
+GET /api/requirements
+GET /api/requirements/:id
+
+GET /api/issues
+GET /api/issues/:id
+
+GET /api/traceability
+
+POST /api/requirements/:id/rewrite
+
+POST /api/issues/:id/resolve
+
+GET /api/reports/:projectId
+
+33. Example real request
+Frontend:
+POST /api/projects/123/analyze
+Backend:
+FastAPI
+   ↓
+create analysis job
+   ↓
+Redis
+   ↓
+LangGraph worker
+Worker:
+Extract
+   ↓
+Analyze
+   ↓
+Embed
+   ↓
+Compare
+   ↓
+Score
+Database:
+analysis_runs
+requirements
+issues
+relationships
+scores
+Frontend:
+GET /api/analysis/789/status
+and displays:
+82 / 84
+97.6%
+Stage 5/6
+
+34. Explainability is extremely important
+Your application should not simply say:
+❌ Conflict detected
+It should say:
+CRITICAL CONFLICT
+
+REQ-031
+Session automatically terminates after 15 minutes.
+
+REQ-042
+Users must remain logged in for at least 30 minutes.
+
+Detected relationship:
+CONTRADICTION
+
+Reason:
+Both requirements apply to the same user/session context,
+but specify incompatible inactivity constraints.
+
+Confidence:
+96%
+
+Evidence:
+Section 3.2
+
+Recommended resolution:
+Apply role-specific timeout policies.
+That makes your application feel like an actual engineering product.
+
+35. AI evaluation
+This is another feature that many student projects miss.
+You need to test whether your AI is actually correct.
+Create a dataset:
+100 requirements
+Manually label:
+ambiguous
+not ambiguous
+
+conflict
+no conflict
+
+testable
+not testable
+
+complete
+incomplete
+Then compare AI output.
+Measure:
+Precision
+Recall
+F1
+False positives
+False negatives
+For example:
+Conflict Detection
+
+Precision: 91%
+Recall:    87%
+F1:        89%
+This gives you an actual basis for claiming your system works.
+
+36. AI observability
+You should also track:
+LLM model
+prompt version
+tokens
+latency
+cost
+retrieved documents
+output
+confidence
+human correction
+This allows:
+Analysis #1092
+
+Model: GPT-5.x
+Prompt: v1.7
+Input tokens: ...
+Output tokens: ...
+Latency: ...
+Cost: ...
+Human accepted: YES
+MLflow can be used for GenAI/LLM tracing, experiment tracking, model management, and evaluation, including integrations with LangChain/LangGraph. Docs by LangChain
+
+37. Security architecture
+Because your system may process sensitive SRS documents:
+User
+ ↓
+Authentication
+ ↓
+Authorization
+ ↓
+Upload validation
+ ↓
+Encrypted storage
+ ↓
+Processing
+ ↓
+Access-controlled results
+You need:
+JWT/session authentication
+RBAC
+project-level permissions
+encrypted storage
+API rate limiting
+input validation
+file-type validation
+malware scanning
+audit logging
+secret management
+no API keys in frontend
+Never put the LLM API key inside your Next.js client-side code.
+It should be:
+Next.js
+    ↓
+your backend
+    ↓
+LLM provider
+not:
+Browser
+    ↓
+OpenAI API
+
+38. What each technology actually does
+This is the important mental model:
+
+Technology
+Job
+Next.js
+User interface
+Tailwind
+UI styling
+FastAPI
+Backend/API
+PostgreSQL
+Application data
+pgvector
+Semantic vector search
+Redis
+Queue/cache
+LangGraph
+AI workflow orchestration
+LLM
+Requirement reasoning
+Embeddings
+Semantic representation
+RAG
+Gives AI relevant project context
+Rule Engine
+Deterministic standards checking
+Knowledge Graph
+Requirement relationships
+PyMuPDF
+PDF extraction
+python-docx
+DOCX extraction
+MLflow
+AI evaluation/observability
+WebSocket/SSE
+Live analysis progress
+S3
+Document storage
+
+39. The most important architecture decision
+I recommend this:
+             REQUIREMENT RADAR
+                    │
+        ┌───────────┴───────────┐
+        │                       │
+     FRONTEND                BACKEND
+        │                       │
+    Next.js                  FastAPI
+        │                       │
+        │               ┌───────┴────────┐
+        │               │                │
+        │            AI ENGINE       DATA ENGINE
+        │               │                │
+        │          LangGraph         PostgreSQL
+        │               │             + pgvector
+        │               │
+        │        ┌──────┼──────┐
+        │        ↓      ↓      ↓
+        │       LLM  Embedding Rules
+        │        │      │      │
+        │        └──────┼──────┘
+        │               ↓
+        │       Semantic Reasoning
+        │               ↓
+        │       Conflict Detection
+        │               ↓
+        │       Traceability Graph
+        │               ↓
+        └────────── API / SSE ─────────┘
+
+40. What your existing screens become
+Your beautiful frontend already gives you the product shell.
+Now connect actual engines behind each screen:
+Dashboard
+Database
+   ↓
+real project count
+real quality score
+real issue count
+real requirement count
+Projects
+PostgreSQL
+   ↓
+real projects/documents
+SRS Analysis
+LangGraph
+   ↓
+real pipeline
+   ↓
+SSE/WebSocket
+   ↓
+real progress
+Requirements
+LLM
++
+Rules
++
+Embeddings
+   ↓
+real requirement analysis
+Issues
+Semantic comparison
++
+constraint reasoning
+   ↓
+real conflicts
+Traceability
+Embeddings
++
+LLM relationship extraction
++
+database graph
+   ↓
+real traceability
+Reports
+Database
++
+analysis results
++
+score engine
+   ↓
+real PDF report
+
+41. And most importantly — your project is NOT "an LLM chatbot"
+I would position Requirement Radar as:
+An AI-assisted Software Requirements Intelligence and Quality Assurance Platform.
+Not:
+"An AI chatbot that checks requirements."
+Your system has:
+Document Intelligence
+        +
+LLM Reasoning
+        +
+Semantic Search
+        +
+Requirement Knowledge Graph
+        +
+Deterministic Rule Engine
+        +
+Conflict Detection
+        +
+Testability Analysis
+        +
+Traceability
+        +
+Human-in-the-loop Review
+        +
+AI Evaluation
+That's a much stronger software engineering + AI project.
+
+42. Development order I recommend
+Don't try to build everything simultaneously.
+Phase 1 — Real document pipeline
+PDF/DOCX upload
+      ↓
+parser
+      ↓
+sections
+      ↓
+requirements
+      ↓
+PostgreSQL
+Phase 2 — LLM requirement understanding
+Requirement
+      ↓
+LLM
+      ↓
+structured JSON
+Phase 3 — Embeddings
+requirements
+      ↓
+embeddings
+      ↓
+pgvector
+Phase 4 — Semantic retrieval
+REQ
+ ↓
+similar requirements
+Phase 5 — Conflict engine
+similar requirements
+ ↓
+constraint extraction
+ ↓
+LLM reasoning
+ ↓
+conflict
+Phase 6 — Testability + ambiguity
+requirement
+ ↓
+quality analysis
+ ↓
+issues
+Phase 7 — Traceability
+requirements
+ ↓
+relationships
+ ↓
+knowledge graph
+Phase 8 — AI recommendations
+issue
+ ↓
+LLM
+ ↓
+rewrite
+ ↓
+human approval
+Phase 9 — Connect your existing UI
+Your current beautiful frontend
+              ↓
+        real APIs
+              ↓
+       real AI results
+Phase 10 — Evaluation
+labeled dataset
+      ↓
+AI predictions
+      ↓
+Precision / Recall / F1
+      ↓
+improve prompts/models
+
+The key principle for your project
+Don't build an LLM that looks intelligent. Build an engineering system where the LLM is one component of the intelligence.
+The strongest architecture for your Requirement Radar is:
+LLM + Embeddings + RAG + Rules + Constraint Reasoning + Knowledge Graph + PostgreSQL/pgvector + Human Review + Evaluation.
+That directly solves your earlier concern about the system being merely keyword-based. The LLM interprets meaning, embeddings find semantically related requirements, deterministic logic validates constraints, and the graph/database preserves the relationships and evidence. 

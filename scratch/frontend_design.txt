@@ -1,0 +1,1172 @@
+1. What is Requirement Radar?
+Core idea
+Requirement Radar is a software engineering tool that answers:
+“Are the requirements in my SRS clear, consistent, testable, traceable, and compliant with requirements-engineering standards?”
+A typical workflow is:
+SRS Document
+     ↓
+Upload / Ingest
+     ↓
+Document Parsing
+     ↓
+Requirement Extraction
+     ↓
+Semantic Analysis
+     ↓
+Ambiguity Detection
+     ↓
+Conflict Detection
+     ↓
+Testability Analysis
+     ↓
+Traceability Analysis
+     ↓
+AI Recommendations
+     ↓
+Quality Score
+     ↓
+Audit Report
+Your screenshots represent different stages of this workflow.
+
+2. Overall Website Layout
+Almost all your screens use the same application shell.
+┌──────────────────────────────────────────────────────────────┐
+│ Sidebar │                 Top Navigation                     │
+│         ├────────────────────────────────────────────────────┤
+│         │                                                    │
+│         │                 Main Content                       │
+│         │                                                    │
+│         │                                                    │
+│         └────────────────────────────────────────────────────┤
+│         │ Radar Sweep / System Status                        │
+└──────────────────────────────────────────────────────────────┘
+There are essentially 3 permanent UI regions:
+A. Left Sidebar
+Navigation between major modules.
+B. Top Navigation
+Search, upload, notifications, user profile and breadcrumbs.
+C. Main Workspace
+Changes depending on the selected module.
+
+3. Left Sidebar
+The sidebar is consistent across all screens.
+Requirement Radar Logo
+At the top:
+REQUIREMENT RADARv2.4.0-audit
+This identifies the application and current product/version.
+The small radar-like icon represents the idea of:
+scanning → detecting → analyzing → reporting
+
+4. Target Engine
+Below the logo:
+TARGET ENGINESpecSentinel AI 🟢
+This is an important part of your concept.
+It indicates that the application uses an AI analysis engine called:
+SpecSentinel AI
+You can describe it as the platform's:
+Semantic Requirement Analysis Engine
+It performs things such as:
+ambiguity detection
+semantic comparison
+conflict detection
+requirement classification
+testability analysis
+traceability analysis
+AI rewriting
+quality scoring
+The green dot means:
+AI engine is online/available.
+
+5. Sidebar Navigation
+You have seven primary modules.
+
+5.1 Dashboard
+Icon:
+📊 Dashboard
+This is the high-level overview of the entire system.
+It answers:
+"What is happening across all my projects?"
+It shows:
+active specifications
+quality scores
+open ambiguities
+parsed requirements
+enrolled specifications
+live analysis/ingestion information
+
+6. Projects
+The Projects module answers:
+"What SRS projects are currently being analyzed?"
+For example:
+Smart Hospital Management System
+Autonomous Drone Navigation Platform
+FinTech Payment Gateway Core
+Each project is treated independently.
+A project can have:
+Project
+ ├── SRS Document
+ ├── Requirements
+ ├── Analysis
+ ├── Issues
+ ├── Traceability
+ └── Reports
+
+7. SRS Analysis
+This is probably one of the most important modules.
+The green:
+LIVE
+indicates that analysis can happen in real time.
+This screen shows the actual AI scanning pipeline.
+The system takes an uploaded SRS and goes through multiple stages.
+
+8. Requirements
+This is your Requirements Matrix.
+It provides a structured representation of individual requirements.
+For example:
+REQ-024
+REQ-031
+REQ-042
+REQ-055
+REQ-018
+REQ-001
+Instead of treating the SRS as just a PDF, Requirement Radar converts it into structured objects.
+Each requirement can have:
+Requirement ID
+Category
+Original statement
+Clarity score
+Issues
+Severity
+Status
+Linked architecture
+Linked tests
+This is a very important transformation.
+
+9. Issues
+The Issues module identifies problems discovered in the requirements.
+Examples:
+Critical
+REQ-031 ↔ REQ-042
+Session Timeout Contradiction
+High
+REQ-024
+Unverifiable Response Latency
+Medium
+REQ-068
+Traceability Gap
+The goal is:
+Don't just tell the developer that the SRS is bad — tell them exactly what is wrong and how to fix it.
+
+10. Traceability
+Traceability answers:
+"Can we trace every requirement to something that implements or verifies it?"
+For example:
+REQ-024
+   ↓
+ARCH-SYS-04
+   ↓
+TEST-VAL-89
+This establishes:
+Requirement
+     ↓
+Architecture
+     ↓
+Implementation
+     ↓
+Test
+This is extremely useful in software engineering and especially important for regulated systems.
+
+11. Reports
+The Reports section converts all analysis information into an executive-quality audit report.
+It provides:
+overall quality score
+compliance score
+critical risks
+recommendations
+audit information
+downloadable PDF
+
+12. Settings
+Settings would control things such as:
+AI analysis configuration
+project settings
+severity thresholds
+standards
+user preferences
+notification settings
+integrations
+organization settings
+You haven't shown the Settings page, but that's what this module should logically contain.
+
+13. Radar Sweep
+At the bottom-left you have:
+Radar Sweep🟢 Active Guard
+This is a nice branding element.
+It communicates:
+Requirement Radar is continuously watching the project for specification problems.
+You can interpret Active Guard as:
+AI Monitoring
+      ↓
+Requirement Changes
+      ↓
+New Issues
+      ↓
+New Conflicts
+      ↓
+Traceability Changes
+
+14. Top Navigation Bar
+Every page has the top bar.
+It contains several important components.
+
+Breadcrumb
+Example:
+Projects > Smart Hospital > Dashboard Overview
+This tells the user where they currently are.
+For example:
+Projects
+   >
+Smart Hospital
+   >
+Requirements Matrix
+This is useful because your application has multiple nested screens.
+
+15. Global Search
+Top right:
+Search specs (⌘K)...
+This is a global requirement/specification search.
+The user should be able to search:
+REQ-024
+REQ-031
+patient
+authentication
+latency
+backup
+Smart Hospital
+The ⌘ K indicator suggests a keyboard shortcut.
+On Windows you could support:
+Ctrl + K
+
+16. Upload SRS
+Top-right button:
+Upload SRS
+This is the primary ingestion function.
+The user uploads something like:
+Smart-Hospital-SRS-v1.3.pdf
+or:
+Drone-Nav-Spec-v2.1.docx
+The system then starts:
+Upload
+ ↓
+Validate
+ ↓
+Parse
+ ↓
+Extract
+ ↓
+Analyze
+
+17. Notification Bell
+You have a bell icon with:
+3
+This means the user has three notifications.
+Possible notifications:
+3 new critical issues detected
+Analysis completed
+New conflict discovered
+AI recommendation available
+
+18. User Profile
+Top-right:
+JAJackLead Architect
+This establishes the current user.
+In your application, this user could be the:
+Lead Architect
+Different roles could eventually exist:
+Developer
+QA Engineer
+Business Analyst
+Software Architect
+Project Manager
+Auditor
+
+19. Dashboard Screen
+Now let's go into your first screenshot.
+The page starts with:
+Good morning, Jack.
+Then:
+Let's make your requirements clearer, more testable, and reliable.
+This is the product's value proposition.
+It tells the user what Requirement Radar does.
+
+20. Dashboard Action Buttons
+You have:
+Quick Upload SRS
+For quickly uploading a document.
++ New Project
+Creates a new project.
+Example:
+New Project
+   ↓
+Project Name
+Domain
+Description
+SRS Upload
+Analysis Settings
+
+21. Dashboard KPI Cards
+You have four major cards.
+
+Active Specifications
+3 Projects Enrolled
+1 pending live analysis
+Meaning:
+There are currently three SRS/specification projects registered.
+One is waiting for or undergoing live analysis.
+
+Quality Index
+83.3 / 100
++5.4% vs last month
+This is your overall requirement quality score.
+A possible calculation could combine:
+Clarity
++ Consistency
++ Testability
++ Traceability
++ Compliance
++ Completeness
+For example:
+Quality Score =
+  25% Clarity
++ 20% Consistency
++ 20% Testability
++ 15% Traceability
++ 10% Compliance
++ 10% Completeness
+You can customize the actual formula later.
+
+22. Open Ambiguities
+Your card shows:
+18 Detected
+
+3 Critical
+7 High
+8 Medium
+This tells the user how many unresolved requirement-quality problems exist.
+For example:
+"fast response"
+"user-friendly"
+"easy to navigate"
+These are vague because they aren't measurable.
+
+23. Parsed Requirements
+You show:
+248 Statements
+Across 3 target domains
+This means your AI has converted documents into individual requirement statements.
+For example:
+84 requirements
++
+75 requirements
++
+89 requirements
+=
+248 statements
+
+24. Enrolled Specifications
+This is the project summary section.
+You have:
+Smart Hospital Management System
+v1.3
+Smart-Hospital-SRS-v1.3.pdf
+Clinical & EHR Systems
+83.3/100
+18 issues
+
+Autonomous Drone Navigation Platform
+v2.1
+Drone-Nav-Spec-v2.1.docx
+Avionics & Robotics
+91.5/100
+5 issues
+
+FinTech Payment Gateway Core
+v4.0
+Payment-Gateway-SRS-v4.0.pdf
+Financial Technology
+78/100
+12 issues
+This gives the architect a quick comparison of project health.
+
+25. Radar Ingestion Stream
+On the right side:
+Radar Ingestion Stream
+This is basically a live technical log.
+Example:
+[SYS-DISCOVERY]
+Found 84 candidate clauses
+
+[PARSER-INFO]
+Access Control verified
+
+[INCOSE-LINT-WARN]
+REQ-024 flagged
+
+[CONFLICT-DETECTED]
+REQ-031 vs REQ-042
+This makes your system feel like an actual engineering analysis platform rather than a static dashboard.
+
+26. Projects Screen
+Your second major screen is:
+Active Specification Projects
+This page focuses specifically on projects.
+Instead of showing aggregated information, it shows each project as a card.
+
+27. Project Card
+Each card contains:
+Project icon
+Identifies it as a specification/project.
+Status
+Examples:
+Completed
+Analyzing
+This tells the user the current analysis state.
+
+Project Name
+Example:
+Smart Hospital Management System
+
+Source document
+Smart-Hospital-SRS-v1.3.pdf
+This connects the project to its source specification.
+
+Domain
+Example:
+Domain: Clinical & EHR Systems
+
+Quality Index
+83.3 / 100
+
+Issues
+18
+
+Arrow
+The arrow means:
+Open this project's detailed workspace.
+
+28. Ingest New SRS Document
+Top-right:
+Ingest New SRS Document
+This is the formal version of uploading a document.
+The word Ingest is good for this type of product because you're not merely storing the document.
+You're doing:
+Document
+   ↓
+Ingestion
+   ↓
+Parsing
+   ↓
+Semantic extraction
+   ↓
+Requirement model
+
+29. SRS Analysis Progress Screen
+This is one of the strongest screens in your design.
+It shows an active scan:
+LIVE SCAN RUNNING
+And:
+Analyzing Smart Hospital SRS
+
+30. Document Information
+At the top:
+Smart-Hospital-SRS-v1.3.pdf
+2.4 MB
+
+Parsed: 84 statements
+Context: ISO/IEC/IEEE 29148
+Hash: 0x9E2F...C1A0
+Each item has a purpose.
+File name
+Identifies the analyzed document.
+File size
+Useful metadata.
+Parsed statements
+Number of requirements extracted.
+Standard
+Shows the analysis context.
+Hash
+Provides document integrity identification.
+This is particularly useful if you want your platform to behave like a serious auditing system.
+
+31. Engine Mode
+You show:
+Deep Semantics v2.4
+This tells the user which analysis mode is running.
+Potential future modes:
+Fast Scan
+Standard Audit
+Deep Semantics
+Compliance Audit
+Security Audit
+
+32. Privacy Ring
+You have:
+Zero-Retention Airgap
+This is a privacy/security feature.
+Conceptually:
+Document
+ ↓
+Temporary analysis
+ ↓
+Results
+ ↓
+Document removed
+For a real implementation, you would need to actually enforce that behavior.
+It's especially valuable for:
+healthcare
+finance
+defense
+enterprise SRS documents
+
+33. Live Analysis Statistics
+You show:
+Elapsed Time: 00:56
+Estimated Remaining: 00:01
+Speed: 9.3 req/s
+These provide transparency.
+Instead of making the user stare at:
+Loading...
+you show actual processing information.
+
+34. Circular Progress Indicator
+You show:
+98%
+PROCESSED
+
+82 / 84 REQ
+This visually communicates analysis progress.
+It tells the user:
+84 total
+82 processed
+2 remaining
+
+35. Pipeline Completion
+You have:
+Stage 4 of 6
+This is extremely useful.
+The analysis engine is represented as a pipeline.
+For example:
+Stage 1
+Document Parsing
+
+↓
+
+Stage 2
+Semantic Analysis
+
+↓
+
+Stage 3
+Conflict Detection
+
+↓
+
+Stage 4
+Testability Analysis
+
+↓
+
+Stage 5
+Traceability Analysis
+
+↓
+
+Stage 6
+Final Scoring
+
+36. Scan Pipeline Sequence
+The detailed pipeline appears below.
+Step 1 — Reading document structure
+84 requirements extracted
+hierarchical schema formed
+The parser identifies:
+headings
+sections
+paragraphs
+requirement statements
+IDs
+relationships
+
+Step 2 — Semantic clarity & vague word scan
+It searches for subjective terms.
+Examples:
+fast
+easy
+user-friendly
+efficient
+secure
+quick
+reliable
+These words are not necessarily wrong, but they often require measurable definitions.
+
+Step 3 — Requirement Conflict Matrix
+The system compares requirements against each other.
+For example:
+REQ-031
+15 minute timeout
+
+vs
+
+REQ-042
+30 minute session retention
+The system detects a contradiction.
+
+Step 4 — INCOSE Testability & SLA Verifier
+It converts vague requirements into measurable/testable criteria.
+For example:
+Original
+The system should provide fast response.
+AI suggestion
+The system shall render 95% of emergency medical images within 200 milliseconds under a concurrent load of 50 active clinician sessions.
+Now QA can actually test it.
+
+37. Scan Telemetry Stream
+This is the technical live log.
+Think of it as:
+Backend logs
++
+AI reasoning events
++
+pipeline events
+Example:
+[SYS-DISCOVERY]
+
+[PARSER-INFO]
+
+[INCOSE-LINT-WARN]
+
+[CONFLICT-DETECTED]
+
+[AI-RECOMMENDATION]
+
+38. Inspect REQ-024 Canvas
+This button opens the detailed analysis for the problematic requirement.
+For example:
+REQ-024
+↓
+Why is it ambiguous?
+↓
+What rule was violated?
+↓
+How can it be rewritten?
+↓
+What tests can verify it?
+
+39. Resolve Conflicts
+This button takes the user to the conflict resolution interface.
+This is where the architect can actually make decisions.
+
+40. Requirements Matrix
+This screen is effectively the central requirement database UI.
+At the top:
+Requirements Matrix
+You also show:
+6 TOTAL ENROLLED
+SpecSentinel AI Sync
+Lint Mode: Strict INCOSE
+
+41. Search Requirements
+The search bar allows searches such as:
+REQ-024
+latency
+authentication
+backup
+MFA
+patient portal
+
+42. Requirement Filters
+You have:
+All 6
+Needs Review 5
+Verified 1
+And:
+Functional (3)
+Non-Functional (3)
+This allows the user to filter the requirement database.
+
+43. Requirement List
+Each requirement appears as a row/card.
+For example:
+REQ-024
+LATENCY SPEC
+⚠ 2 ISSUES
+Clarity Index 42/100
+Needs Review
+Then the original requirement.
+This makes the SRS searchable and structured.
+
+44. Requirement Detail Panel
+When REQ-024 is selected, the right panel opens.
+It contains:
+REQ-024 Inspection
+Section 2.1 Diagnostic Latency
+
+45. Semantic Quality Index
+You show:
+42 / 100
+Ambiguous Clauses Detected
+This is a requirement-level quality score.
+It is different from the overall project score.
+You therefore have:
+Requirement Score
+        ↓
+Project Quality Score
+        ↓
+Organization/Global Quality Score
+
+46. Current Requirement Clause
+This displays the original requirement exactly as written.
+Example:
+"The system should provide fast response for emergency medical image rendering and patient vitals telemetry."
+This is important because the user needs to see the source before changing it.
+
+47. Syntactic & Semantic Rule Violations
+You identify individual problems.
+Subjective Lexicon
+Problem:
+"fast response"
+Why?
+There is no measurable definition.
+
+Weak Modal Verb
+Problem:
+"should"
+A stricter requirement normally uses:
+shall
+This allows your system to enforce a requirement-writing style.
+
+48. AI Testable Rewrite Suggestion
+This is arguably one of the most valuable features.
+The system doesn't simply say:
+❌ Bad requirement.
+It says:
+Here's a better version.
+Example:
+The system shall render 95% of DICOM emergency
+medical images within 200 milliseconds under a
+concurrent load of 50 active clinician sessions.
+Now the requirement has:
+Subject
++
+Mandatory action
++
+Metric
++
+Threshold
++
+Condition
+This is what makes it testable.
+
+49. +50 Score Boost
+This communicates:
+Applying this rewrite should significantly improve the requirement quality score.
+The actual score calculation should be deterministic in your backend rather than simply hardcoded.
+
+50. Issues & Conflict Resolver
+This screen is your problem-solving workspace.
+Header:
+Issues & Conflict Resolution
+And:
+5 total issues detected across Smart Hospital Management
+This tells the architect:
+Here are the problems requiring human attention.
+
+51. Issue Severity
+You have:
+3 Critical
+7 High
+8 Medium
+Severity helps prioritize remediation.
+Critical
+Can cause:
+security problems
+system contradictions
+compliance failure
+major functional risk
+High
+Important but not immediately catastrophic.
+Medium
+Quality/maintenance concerns.
+
+52. Issue Categories
+You have tabs:
+All Issues
+Requirement Conflicts
+Ambiguity
+Missing Acceptance
+This is good because the user can focus on a specific type of problem.
+
+53. Issue Navigator
+The left panel lists issues.
+Example:
+REQ-031 ↔ REQ-042 Session Timeout Contradiction
+This allows the user to navigate between problems without leaving the page.
+
+54. Main Conflict Detail
+The selected conflict is:
+REQ-031 ↔ REQ-042 Session Timeout Contradiction
+This tells us two requirements contradict each other.
+
+55. Side-by-Side Clause Comparison
+This is very good UX.
+Instead of forcing the user to open two requirements separately:
+REQ-031                    REQ-042
+
+15 minutes                 30 minutes
+The contradiction becomes immediately obvious.
+
+56. Root Cause Diagnostics
+Your system then explains why the conflict exists.
+For example:
+Security team:
+15-minute lock
+
+Clinical operations:
+30-minute retention
+This is much better than simply saying:
+Conflict detected.
+It gives contextual reasoning.
+
+57. AI Harmonization Strategy
+The AI proposes a resolution.
+Your example:
+Adopt a role-based session policy.
+This is an intelligent approach because the solution isn't necessarily:
+Requirement A wins
+Requirement B loses
+Instead:
+Administrative users
+→ 15-minute timeout
+
+Clinical monitoring terminals
+→ different session behavior
+That's much closer to real software architecture.
+
+58. Apply Harmonized Resolution
+This button should actually modify the requirement after confirmation.
+Ideally your implementation should show:
+Before
+↓
+AI proposal
+↓
+User approval
+↓
+Updated requirement
+↓
+Audit log
+You should never silently modify requirements.
+
+59. Traceability Matrix
+Your Traceability screen shows:
+Inter-Requirement Dependency Graph
+This is essentially a Requirement Traceability Matrix.
+
+60. REQ-024 Traceability
+Example:
+REQ-024
+Diagnostic Latency Requirement
+
+LINKED TARGETS:
+ARCH-SYS-04
+TEST-VAL-89
+This means:
+Requirement
+   ↓
+Architecture component
+   ↓
+Validation test
+
+61. REQ-031 Traceability
+REQ-031
+Security Auto-Lock Session Policy
+
+LINKED TARGETS:
+HIPAA-COMPLIANCE-164
+REQ-042
+This means the requirement is connected to:
+a compliance rule
+another requirement
+This is especially useful for conflict detection.
+
+62. REQ-055
+Patient Portal Interface Ergonomics
+
+LINKED TARGET:
+UI-STYLE-GUIDE-01
+This establishes a link between a requirement and a UI standard.
+
+63. REQ-018
+Disaster Recovery Backup Interval
+
+LINKED TARGET:
+COMPLIANCE-DR-02
+This connects a requirement with disaster recovery/compliance criteria.
+
+64. REQ-001
+Multi-Factor Authentication Enforcer
+
+LINKED TARGETS:
+NIST-SP800-63B
+TEST-MFA-001
+This is particularly strong because you have:
+Requirement
+ ↓
+Security standard
+ ↓
+Test
+
+65. Why Traceability Is Important
+Without traceability:
+Requirement
+      ?
+Architecture
+      ?
+Implementation
+      ?
+Testing
+With traceability:
+REQ-001
+  ↓
+Architecture
+  ↓
+Code
+  ↓
+Test
+  ↓
+Compliance
+This makes the SRS auditable.
+
+66. Quality Audit Reports
+Your final screen is:
+Specification Quality Audit Reports
+This is the executive summary.
+Instead of showing technical details, it gives decision-makers the big picture.
+
+67. Overall Quality Score
+83.3 / 100
+This represents the overall quality of the SRS.
+Then:
++5.4% improvement compared to last specification revision
+This provides historical comparison.
+
+68. INCOSE Rule Compliance
+You show:
+91.2%
+78 of 84 statements
+This tells the user how many requirements follow your selected requirement-writing rules.
+For example:
+84 total
+78 compliant
+6 violations
+
+69. Critical Risk Factors
+You show:
+3 Conflicts
+This tells management:
+There are three serious contradictions that need attention.
+
+70. Download Executive PDF
+This button:
+Download Executive PDF
+should generate a formal report containing something like:
+Requirement Radar
+Specification Audit Report
+
+Project
+SRS version
+Audit date
+
+Overall Score
+Compliance Score
+Critical Risks
+
+Requirement Statistics
+
+Ambiguity Analysis
+
+Conflict Analysis
+
+Traceability
+
+Recommendations
+
+AI Suggested Improvements
+
+Audit Summary
+This is useful for submitting the result to:
+project managers
+clients
+faculty
+auditors
+software architects
+QA teams
+
+71. Your Website's Core Modules
+Putting everything together:
+                    REQUIREMENT RADAR
+                           │
+          ┌────────────────┴────────────────┐
+          │                                 │
+       Projects                         Dashboard
+          │
+          ▼
+      SRS Upload
+          │
+          ▼
+    Document Parser
+          │
+          ▼
+ Requirement Extraction
+          │
+          ▼
+   SpecSentinel AI
+          │
+    ┌─────┼──────────┬───────────┐
+    ▼     ▼          ▼           ▼
+Ambiguity Conflict Testability Traceability
+    │     │          │           │
+    └─────┴──────────┴───────────┘
+                  │
+                  ▼
+           Quality Scoring
+                  │
+           ┌──────┴──────┐
+           ▼             ▼
+       Resolution      Reports
+
+72. The Most Important Feature: Requirement Intelligence
+Your application isn't just a document viewer.
+The main intelligence is:
+1. Extract
+PDF/DOCX
+ ↓
+Requirements
+2. Understand
+What does each requirement mean?
+3. Validate
+Is it clear?
+Is it measurable?
+Is it testable?
+4. Compare
+Does it conflict with another requirement?
+5. Trace
+What architecture/test/compliance item is connected?
+6. Improve
+How should the requirement be rewritten?
+7. Score
+How good is the specification?
+8. Report
+Generate audit report
+That's the complete product.
+
+73. Example: What Happens When You Upload an SRS?
+Suppose you upload:
+Smart-Hospital-SRS-v1.3.pdf
+Your system could execute:
+                 UPLOAD
+                    ↓
+              File Validation
+                    ↓
+             PDF Text Extraction
+                    ↓
+             Section Detection
+                    ↓
+          Requirement Identification
+                    ↓
+             Requirement IDs
+                    ↓
+        ┌───────────┼────────────┐
+        ↓           ↓            ↓
+    Ambiguity    Conflicts    Testability
+        ↓           ↓            ↓
+        └───────────┼────────────┘
+                    ↓
+             Traceability
+                    ↓
+            Compliance Check
+                    ↓
+              Quality Score
+                    ↓
+           AI Recommendations
+                    ↓
+             Human Review
+                    ↓
+            Apply Corrections
+                    ↓
+              Final Report
+
+74. What Makes Your Design Different
+The strongest aspect of your UI is that it follows a real software engineering workflow rather than being just an AI chatbot.
+A typical AI tool would say:
+"Your requirement is ambiguous."
+Your system goes much further:
+Requirement
+     ↓
+Problem detected
+     ↓
+Rule violated
+     ↓
+Severity
+     ↓
+Reason
+     ↓
+Related requirements
+     ↓
+Architecture dependency
+     ↓
+Test dependency
+     ↓
+AI rewrite
+     ↓
+Conflict resolution
+     ↓
+Quality score
+     ↓
+Audit report
+That's a much stronger project.
+
+75. One Important UI Issue I Notice
+There is one inconsistency across your screenshots that you should fix before finalizing the frontend.
+For example, the Dashboard shows:
+Open Ambiguities
+18 Detected
+
+3 Critical
+7 High
+8 Medium
+which totals:
+18
+But your Issues screen says:
+5 total issues detected
+while simultaneously showing:
+3 Critical
+7 High
+8 Medium
+which totals 18.
+So your UI currently has conflicting numbers.
+You should establish a clear distinction, for example:
+Option A — Total issues
+18 total issues
+3 Critical
+7 High
+8 Medium
+Then Issues page should also say:
+18 total issues detected.
+Option B — Active unresolved issues
+18 detected
+5 unresolved
+Then explicitly label them:
+18 Total Issues
+5 Open
+13 Resolved
+I strongly recommend Option B if you want the application to support issue resolution/history.

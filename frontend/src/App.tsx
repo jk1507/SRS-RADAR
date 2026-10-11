@@ -12,15 +12,20 @@ import { ProjectsView } from './views/ProjectsView';
 import { TraceabilityView } from './views/TraceabilityView';
 import { ReportsView } from './views/ReportsView';
 import { SettingsView } from './views/SettingsView';
-import { mockIssues } from './data/mockData';
+import { useAsync } from './api/hooks';
+import { api } from './api/client';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [selectedReqId, setSelectedReqId] = useState<string>('REQ-024');
-  const [selectedIssueId, setSelectedIssueId] = useState<string>('ISS-001');
+  const [selectedReqId, setSelectedReqId] = useState<string>('');
+  const [selectedIssueId, setSelectedIssueId] = useState<string>('');
+
+  // Real open-issue count across all projects (sidebar badge)
+  const issueCounts = useAsync(() => api.getIssueCounts(), []);
+  const openIssuesCount = issueCounts.data?.open ?? 0;
 
   // Handle keyboard shortcut ⌘K or Ctrl+K for search command palette
   React.useEffect(() => {
@@ -42,7 +47,7 @@ export const App: React.FC = () => {
         setActiveTab={setActiveTab}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
-        openIssuesCount={mockIssues.length}
+        openIssuesCount={openIssuesCount}
       />
 
       {/* Header Top Bar */}
@@ -96,9 +101,7 @@ export const App: React.FC = () => {
           <ReportsView onNavigate={(tab) => setActiveTab(tab)} />
         )}
 
-        {activeTab === 'settings' && (
-          <SettingsView onNavigate={(tab) => setActiveTab(tab)} />
-        )}
+        {activeTab === 'settings' && <SettingsView />}
       </main>
 
       {/* Global Command Palette Modal (⌘K) */}

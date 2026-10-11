@@ -23,3 +23,16 @@ async def get_db():
             yield session
         finally:
             await session.close()
+
+
+async def init_db() -> None:
+    """Create tables if missing (idempotent). Alembic remains the forward
+    migration path for Postgres deployments (database/alembic)."""
+    from app.models import Base  # noqa: F401  (registers all models)
+    import app.models  # noqa: F401
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+async def get_engine_url() -> str:
+    return str(engine.url)

@@ -6,6 +6,8 @@ root_dir = Path(__file__).resolve().parent.parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
@@ -13,6 +15,15 @@ from app.api.v1 import api_v1_router
 from app.schemas.health import HealthResponse, AIHealthResponse
 from app.schemas.meta import MetaResponse
 from app.api.v1.health import health_check, ai_health_check, get_meta
+from app.core.db import init_db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    from app.startup import seed_defaults
+    await seed_defaults()
+    yield
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -21,6 +32,7 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 app.add_middleware(

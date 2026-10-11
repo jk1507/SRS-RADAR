@@ -19,10 +19,11 @@ def calculate_requirement_scores(
     med_amb = sum(1 for a in grounded_ambiguities if a.get("severity") == "Medium")
     unambiguity = max(0.0, 100.0 - (30.0 * high_amb) - (15.0 * med_amb))
 
-    # 2. Clarity: 100 - 20*(high LANG) - 10*(medium) - 5*(low) - 10 if no actor
-    high_lang = sum(1 for v in rule_violations if v.get("severity") == "High")
-    med_lang = sum(1 for v in rule_violations if v.get("severity") == "Medium")
-    low_lang = sum(1 for v in rule_violations if v.get("severity") == "Low")
+    # 2. Clarity: 100 - 20*(high RQ-LANG) - 10*(medium) - 5*(low) - 10 if no actor
+    lang_violations = [v for v in rule_violations if "LANG" in str(v.get("rule_id", ""))]
+    high_lang = sum(1 for v in lang_violations if v.get("severity") == "High")
+    med_lang = sum(1 for v in lang_violations if v.get("severity") == "Medium")
+    low_lang = sum(1 for v in lang_violations if v.get("severity") == "Low")
     no_actor = 10.0 if not req.get("has_actor", True) else 0.0
     clarity = max(0.0, 100.0 - (20.0 * high_lang) - (10.0 * med_lang) - (5.0 * low_lang) - no_actor)
 

@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
 import { ActiveTab, IssueItem } from '../types';
-import { 
-  Bug, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Download, 
-  ArrowRight, 
-  Sparkles, 
-  Check, 
-  ShieldAlert, 
+import {
+  Bug,
+  AlertTriangle,
+  CheckCircle2,
+  Download,
+  ArrowRight,
+  Sparkles,
+  Check,
+  ShieldAlert,
   HelpCircle,
   Clock,
-  Layers
+  Layers,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
-import { mockIssues } from '../data/mockData';
+import { api } from '../api/client';
+import { useActiveProject, useAsync, toIssueItem } from '../api/hooks';
 
 interface IssuesConflictResolverViewProps {
   onNavigate: (tab: ActiveTab) => void;
@@ -22,20 +25,38 @@ interface IssuesConflictResolverViewProps {
 
 export const IssuesConflictResolverView: React.FC<IssuesConflictResolverViewProps> = ({
   onNavigate,
-  selectedIssueId = 'ISS-001',
+  selectedIssueId,
 }) => {
-  const [issues, setIssues] = useState<IssueItem[]>(mockIssues);
-  const [activeIssueId, setActiveIssueId] = useState<string>(selectedIssueId);
+  const { active, activeId } = useActiveProject();
+  const issuesData = useAsync(
+    () => (activeId ? api.getIssues({ project_id: activeId }) : Promise.resolve([])),
+    [activeId],
+  );
+  const countsData = useAsync(
+    () => (activeId ? api.getIssueCounts(activeId) : Promise.resolve(null)),
+    [activeId],
+  );
+  const [activeIssueId, setActiveIssueId] = useState<string | undefined>(selectedIssueId);
   const [filterType, setFilterType] = useState<'all' | 'conflicts' | 'ambiguity' | 'acceptance'>('all');
-  const [resolvedIssues, setResolvedIssues] = useState<Record<string, boolean>>({});
+  const [busy, setBusy] = useState(false);
 
-  const currentIssue = issues.find((i) => i.id === activeIssueId) || issues[0];
+  const issues: IssueItem[] = (issuesData.data || []).map(toIssueItem);
+  const rawById = new Map((issuesData.data || []).map((i) => [i.id, i]));
+  const counts = countsData.data;
 
-  const handleResolveIssue = (issueId: string) => {
-    setIssues((prev) =>
-      prev.map((i) => (i.id === issueId ? { ...i, status: 'Resolved' } : i))
-    );
-    setResolvedIssues((prev) => ({ ...prev, [issueId]: true }));
+  const currentIssue =
+    issues.find((i) => i.id === activeIssueId) || issues[0];
+
+  const handleResolveIssue = async (issueId: string) => {
+    setBusy(true);
+    try {
+      await api.resolveIssue(issueId, { note: 'Resolved from conflict resolver' });
+      await Promise.all([issuesData.reload(), countsData.reload()]);
+    } catch (err) {
+      alert(`Resolve failed: ${(err as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const filteredIssues = issues.filter((i) => {
@@ -44,6 +65,26 @@ export const IssuesConflictResolverView: React.FC<IssuesConflictResolverViewProp
     if (filterType === 'acceptance') return i.type.includes('ACCEPTANCE');
     return true;
   });
+
+  if (issuesData.loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] gap-3 text-on-surface-variant">
+        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        <span className="font-body-md text-body-md">Loading issues…</span>
+      </div>
+    );
+  }
+  if (issuesData.error) {
+    return (
+      <div className="m-6 p-5 rounded-xl bg-error-container/20 border border-error/40 flex flex-col gap-2">
+        <div className="flex items-center gap-2 text-error font-semibold"><AlertCircle className="w-5 h-5" /> {issuesData.error}</div>
+        <button onClick={issuesData.reload} className="mt-2 self-start h-8 px-3 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md">Retry</button>
+      </div>
+    );
+  }
+
+  const sevCounts = counts?.open_by_severity || {};
+  const typeCounts = counts?.open_by_type || {};
 
   return (
     <div className="flex flex-col w-full min-h-[calc(100vh-3.5rem)] px-4 sm:px-6 py-6 gap-6 animate-in fade-in duration-300">
@@ -59,7 +100,8 @@ export const IssuesConflictResolverView: React.FC<IssuesConflictResolverViewProp
           </div>
           <h1 className="font-headline-lg text-2xl sm:text-3xl text-on-surface tracking-tight font-semibold">Issues & Conflict Resolution</h1>
           <p className="font-body-md text-body-md text-on-surface-variant">
-            {issues.length} total issues detected across Smart Hospital Management (SRS v1.3)
+            {counts?.total ?? issues.length} total · {counts?.open ?? 0} open · {counts?.resolved ?? 0} resolved
+            {' '}across {active?.name || 'this project'}
           </p>
         </div>
 
@@ -67,26 +109,30 @@ export const IssuesConflictResolverView: React.FC<IssuesConflictResolverViewProp
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-error-container/80 text-error border border-error/30 shadow-sm">
             <ShieldAlert className="w-4 h-4" />
-            <span className="font-code-md text-code-md font-bold">3</span>
+            <span className="font-code-md text-code-md font-bold">{sevCounts.critical ?? 0}</span>
             <span className="font-label-md text-label-md">Critical</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-high border border-surface-container-highest text-on-surface-variant shadow-sm">
             <span className="w-2 h-2 rounded-full bg-amber-400" />
-            <span className="font-code-md text-code-md font-bold text-on-surface">7</span>
+            <span className="font-code-md text-code-md font-bold text-on-surface">{sevCounts.high ?? 0}</span>
             <span className="font-label-md text-label-md">High</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-high border border-surface-container-highest text-on-surface-variant shadow-sm">
             <span className="w-2 h-2 rounded-full bg-secondary" />
-            <span className="font-code-md text-code-md font-bold text-on-surface">8</span>
+            <span className="font-code-md text-code-md font-bold text-on-surface">{sevCounts.medium ?? 0}</span>
             <span className="font-label-md text-label-md">Medium</span>
           </div>
-          <button 
-            onClick={() => alert('Generating formal PDF SRS Audit Report for Smart Hospital Management...')}
-            className="ml-2 flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-md text-label-md font-semibold transition-colors shadow-sm border border-surface-container-high"
-          >
-            <Download className="w-4 h-4" />
-            <span>Export Audit (PDF)</span>
-          </button>
+          {activeId && (
+            <a
+              href={api.getReportHtmlUrl(activeId)}
+              target="_blank"
+              rel="noreferrer"
+              className="ml-2 flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-md text-label-md font-semibold transition-colors shadow-sm border border-surface-container-high"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export Audit (PDF)</span>
+            </a>
+          )}
         </div>
       </div>
 
@@ -97,28 +143,28 @@ export const IssuesConflictResolverView: React.FC<IssuesConflictResolverViewProp
           className={`px-3.5 py-1.5 rounded-lg font-label-md text-label-md transition-all flex items-center gap-2 ${filterType === 'all' ? 'bg-surface-container text-on-surface font-semibold shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
         >
           <span>All Issues</span>
-          <span className="font-code-sm text-code-sm px-1.5 py-0.2 rounded-full bg-surface-container-highest text-on-surface-variant">{issues.length}</span>
+          <span className="font-code-sm text-code-sm px-1.5 py-0.2 rounded-full bg-surface-container-highest text-on-surface-variant">{counts?.total ?? issues.length}</span>
         </button>
         <button
           onClick={() => setFilterType('conflicts')}
           className={`px-3.5 py-1.5 rounded-lg font-label-md text-label-md transition-all flex items-center gap-2 ${filterType === 'conflicts' ? 'bg-error-container/30 text-error font-semibold shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
         >
           <span>Requirement Conflicts</span>
-          <span className="font-code-sm text-code-sm px-1.5 py-0.2 rounded-full bg-error-container text-error">3</span>
+          <span className="font-code-sm text-code-sm px-1.5 py-0.2 rounded-full bg-error-container text-error">{typeCounts.conflict ?? 0}</span>
         </button>
         <button
           onClick={() => setFilterType('ambiguity')}
           className={`px-3.5 py-1.5 rounded-lg font-label-md text-label-md transition-all flex items-center gap-2 ${filterType === 'ambiguity' ? 'bg-surface-container text-on-surface font-semibold shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
         >
           <span>Ambiguity</span>
-          <span className="font-code-sm text-code-sm px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface-variant">7</span>
+          <span className="font-code-sm text-code-sm px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface-variant">{typeCounts.ambiguity ?? 0}</span>
         </button>
         <button
           onClick={() => setFilterType('acceptance')}
           className={`px-3.5 py-1.5 rounded-lg font-label-md text-label-md transition-all flex items-center gap-2 ${filterType === 'acceptance' ? 'bg-surface-container text-on-surface font-semibold shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
         >
           <span>Missing Acceptance</span>
-          <span className="font-code-sm text-code-sm px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface-variant">5</span>
+          <span className="font-code-sm text-code-sm px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface-variant">{typeCounts.missing_acceptance ?? 0}</span>
         </button>
       </div>
 
@@ -249,20 +295,35 @@ export const IssuesConflictResolverView: React.FC<IssuesConflictResolverViewProp
                   {currentIssue.details.recommendedResolution}
                 </p>
 
-                <div className="flex items-center justify-end pt-2">
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  {rawById.get(currentIssue.id)?.status === 'open' && (
+                    <button
+                      onClick={() => api.dismissIssue(currentIssue.id, 'Not actionable')
+                        .then(() => Promise.all([issuesData.reload(), countsData.reload()]))
+                        .catch((err) => alert(err.message))}
+                      className="px-4 py-2 rounded-lg bg-surface-container border border-surface-container-high text-on-surface-variant font-label-md text-label-md font-semibold flex items-center gap-2 hover:border-outline transition-all"
+                    >
+                      <Bug className="w-4 h-4" />
+                      <span>Dismiss</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => handleResolveIssue(currentIssue.id)}
-                    disabled={resolvedIssues[currentIssue.id]}
+                    disabled={busy || rawById.get(currentIssue.id)?.status !== 'open'}
                     className={`
                       px-5 py-2 rounded-lg font-label-md text-label-md font-semibold flex items-center gap-2 transition-all shadow-md
-                      ${resolvedIssues[currentIssue.id]
+                      ${busy || rawById.get(currentIssue.id)?.status !== 'open'
                         ? 'bg-tertiary-container/30 text-tertiary cursor-default'
                         : 'bg-primary text-on-primary hover:opacity-90 active:scale-95'
                       }
                     `}
                   >
                     <Check className="w-4 h-4" />
-                    <span>{resolvedIssues[currentIssue.id] ? 'Harmonized & Resolved' : 'Apply Harmonized Resolution'}</span>
+                    <span>
+                      {rawById.get(currentIssue.id)?.status === 'open'
+                        ? (busy ? 'Re-checking…' : 'Apply Harmonized Resolution')
+                        : 'Resolved'}
+                    </span>
                   </button>
                 </div>
               </div>

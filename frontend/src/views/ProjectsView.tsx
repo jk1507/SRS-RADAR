@@ -1,7 +1,8 @@
 import React from 'react';
 import { ActiveTab } from '../types';
-import { mockProjects } from '../data/mockData';
-import { FolderKanban, FileText, CheckCircle2, AlertTriangle, ArrowRight, Plus } from 'lucide-react';
+import { api } from '../api/client';
+import { useAsync, toProjectItem, setActiveProjectId } from '../api/hooks';
+import { FolderKanban, FileText, CheckCircle2, AlertTriangle, ArrowRight, Plus, Loader2, AlertCircle } from 'lucide-react';
 
 interface ProjectsViewProps {
   onNavigate: (tab: ActiveTab) => void;
@@ -9,6 +10,26 @@ interface ProjectsViewProps {
 }
 
 export const ProjectsView: React.FC<ProjectsViewProps> = ({ onNavigate, onOpenUpload }) => {
+  const { data, loading, error, reload } = useAsync(() => api.getProjects(), []);
+  const projects = (data || []).map((p) => toProjectItem(p));
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] gap-3 text-on-surface-variant">
+        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        <span className="font-body-md text-body-md">Loading projects…</span>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="m-6 p-5 rounded-xl bg-error-container/20 border border-error/40 flex flex-col gap-2">
+        <div className="flex items-center gap-2 text-error font-semibold"><AlertCircle className="w-5 h-5" /> {error}</div>
+        <button onClick={reload} className="mt-2 self-start h-8 px-3 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md">Retry</button>
+      </div>
+    );
+  }
+
   return (
     <div className="px-4 sm:px-6 py-6 max-w-7xl mx-auto w-full flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-surface-container-high">
@@ -25,11 +46,18 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({ onNavigate, onOpenUp
         </button>
       </div>
 
+      {projects.length === 0 && (
+        <div className="p-10 rounded-2xl border border-dashed border-surface-container-high text-center flex flex-col gap-3 items-center">
+          <FolderKanban className="w-8 h-8 text-outline" />
+          <p className="font-body-md text-body-md text-on-surface-variant">No projects yet — ingest your first SRS document to get started.</p>
+          <button onClick={onOpenUpload} className="h-9 px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold">Ingest New SRS Document</button>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockProjects.map((proj) => (
+        {projects.map((proj) => (
           <div
             key={proj.id}
-            onClick={() => onNavigate(proj.id === 'proj-01' ? 'srs-progress' : 'requirements')}
+            onClick={() => { setActiveProjectId(proj.id); onNavigate(proj.status === 'Analyzing' ? 'srs-progress' : 'requirements'); }}
             className="p-6 rounded-2xl bg-surface-container-low border border-surface-container-high hover:border-primary/50 transition-all cursor-pointer flex flex-col justify-between gap-6 group hover:shadow-xl"
           >
             <div className="flex flex-col gap-3">

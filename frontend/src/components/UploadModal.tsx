@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Upload, FileText, CheckCircle2, X, Cpu, ShieldCheck } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, X, Cpu, ShieldCheck, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
+import { useActiveProject } from '../api/hooks';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -12,6 +13,10 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSta
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preset, setPreset] = useState<'incose' | 'ieee' | 'agile'>('incose');
   const [isDragging, setIsDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const { active, reload } = useActiveProject();
 
   if (!isOpen) return null;
 
@@ -31,15 +36,25 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSta
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedFile) {
-      try {
-        await api.uploadDocument(selectedFile);
-      } catch (err) {
-        console.warn('API upload failed, triggering scan:', err);
-      }
+    if (!selectedFile || uploading) return;
+    setUploading(true);
+    setError(null);
+    setProgress(0);
+    try {
+      await api.uploadDocument(selectedFile, {
+        // Upload into the active project when one exists; else a new project
+        // is created server-side from the filename.
+        projectId: active?.id,
+        onProgress: setProgress,
+      });
+      reload();
+      onStartScan();
+      onClose();
+    } catch (err) {
+      setError((err as Error).message || 'Upload failed');
+    } finally {
+      setUploading(false);
     }
-    onStartScan();
-    onClose();
   };
 
   return (
@@ -54,8 +69,10 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSta
               <Upload className="w-5 h-5" />
             </div>
             <div className="flex flex-col">
-              <h2 className="font-headline-md text-headline-md font-semibold text-on-surface">Quick Upload Specification</h2>
-              <span className="font-code-sm text-code-sm text-outline">Ingest SRS, PDF, DOCX, or Markdown files</span>
+              <h2 className="font-headline-md text-headline-md font-semibold text-on-surface">Upload Specification</h2>
+              <span className="font-code-sm text-code-sm text-outline">
+                {active ? `Target project: ${active.name}` : 'A new project will be created'}
+              </span>
             </div>
           </div>
           <button 
@@ -80,8 +97,9 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSta
           >
             <input
               type="file"
-              accept=".pdf,.docx,.txt,.md,.json"
+              accept=".pdf,.docx,.txt,.md"
               onChange={handleFileChange}
+              disabled={uploading}
               className="absolute inset-0 opacity-0 cursor-pointer"
             />
 
@@ -89,7 +107,9 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSta
               <div className="flex flex-col items-center gap-2">
                 <CheckCircle2 className="w-10 h-10 text-tertiary" />
                 <span className="font-body-md text-body-md font-semibold text-on-surface">{selectedFile.name}</span>
-                <span className="font-code-sm text-code-sm text-outline">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB • Ready for analysis</span>
+                <span className="font-code-sm text-code-sm text-outline">
+                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB • Ready for analysis
+                </span>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
@@ -97,10 +117,27 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSta
                 <span className="font-body-md text-body-md font-medium text-on-surface">
                   Drag and drop your SRS document here, or <span className="text-primary font-semibold underline">browse</span>
                 </span>
-                <span className="font-code-sm text-code-sm text-outline">Supports PDF, DOCX, Markdown up to 50MB</span>
+                <span className="font-code-sm text-code-sm text-outline">Supports PDF, DOCX, Markdown</span>
               </div>
             )}
           </div>
+
+          {/* Upload progress */}
+          {uploading && (
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-4 h-4 text-primary animate-spin" />
+              <div className="flex-1 h-2 rounded-full bg-surface-container-highest overflow-hidden">
+                <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+              </div>
+              <span className="font-code-sm text-code-sm text-on-surface-variant">{progress}%</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="p-3 rounded-lg bg-error-container/30 border border-error/40">
+              <span className="font-body-sm text-body-sm text-error">{error}</span>
+            </div>
+          )}
 
           {/* Engine Preset Selector */}
           <div className="flex flex-col gap-2">
@@ -109,6 +146,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSta
               <button
                 type="button"
                 onClick={() => setPreset('incose')}
+                disabled={uploading}
                 className={`
                   p-3 rounded-xl border flex flex-col items-start gap-1 transition-all text-left
                   ${preset === 'incose' ? 'border-primary bg-primary-container/20 text-on-surface' : 'border-surface-container-high bg-surface-container hover:bg-surface-container-high text-on-surface-variant'}
@@ -122,6 +160,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSta
               <button
                 type="button"
                 onClick={() => setPreset('ieee')}
+                disabled={uploading}
                 className={`
                   p-3 rounded-xl border flex flex-col items-start gap-1 transition-all text-left
                   ${preset === 'ieee' ? 'border-primary bg-primary-container/20 text-on-surface' : 'border-surface-container-high bg-surface-container hover:bg-surface-container-high text-on-surface-variant'}
@@ -135,6 +174,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSta
               <button
                 type="button"
                 onClick={() => setPreset('agile')}
+                disabled={uploading}
                 className={`
                   p-3 rounded-xl border flex flex-col items-start gap-1 transition-all text-left
                   ${preset === 'agile' ? 'border-primary bg-primary-container/20 text-on-surface' : 'border-surface-container-high bg-surface-container hover:bg-surface-container-high text-on-surface-variant'}
@@ -152,16 +192,18 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSta
             <button
               type="button"
               onClick={onClose}
+              disabled={uploading}
               className="px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:opacity-90 transition-opacity shadow-md flex items-center gap-2"
+              disabled={!selectedFile || uploading}
+              className="px-5 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:opacity-90 transition-opacity shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Upload className="w-4 h-4" />
-              <span>Launch Ingestion Scan</span>
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              <span>{uploading ? `Uploading ${progress}%` : 'Launch Ingestion Scan'}</span>
             </button>
           </div>
         </form>

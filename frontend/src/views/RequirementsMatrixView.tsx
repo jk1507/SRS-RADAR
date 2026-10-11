@@ -1,21 +1,24 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActiveTab, RequirementItem } from '../types';
-import { 
-  Search, 
-  Filter, 
-  Sparkles, 
-  CheckCircle2, 
-  AlertTriangle, 
-  ArrowRight, 
-  Check, 
+import {
+  Search,
+  Filter,
+  Sparkles,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowRight,
+  Check,
   SlidersHorizontal,
   GitFork,
   Plus,
   Edit3,
   Copy,
-  RefreshCw
+  RefreshCw,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
-import { mockRequirements } from '../data/mockData';
+import { api, RecommendationData, RequirementData } from '../api/client';
+import { useActiveProject, useAsync, toRequirementItem } from '../api/hooks';
 
 interface RequirementsMatrixViewProps {
   onNavigate: (tab: ActiveTab) => void;
@@ -25,51 +28,85 @@ interface RequirementsMatrixViewProps {
 
 export const RequirementsMatrixView: React.FC<RequirementsMatrixViewProps> = ({
   onNavigate,
-  selectedReqId = 'REQ-024',
+  selectedReqId,
   onSelectReq,
 }) => {
-  const [reqs, setReqs] = useState<RequirementItem[]>(mockRequirements);
-  const [activeReqId, setActiveReqId] = useState<string>(selectedReqId);
+  const { active, activeId } = useActiveProject();
+  const reqsApi = useAsync(
+    () => (activeId
+      ? api.getRequirements({ project_id: activeId, page_size: 200 })
+      : Promise.resolve([])),
+    [activeId],
+  );
+
+  const [rawReqs, setRawReqs] = useState<RequirementData[]>([]);
+  const [activeReqId, setActiveReqId] = useState<string | undefined>(selectedReqId);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'functional' | 'non-functional'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'review' | 'verified'>('all');
   const [appliedFixes, setAppliedFixes] = useState<Record<string, boolean>>({});
   const [customCriteriaInput, setCustomCriteriaInput] = useState('');
+  const [rec, setRec] = useState<RecommendationData | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const currentReq = reqs.find((r) => r.id === activeReqId) || reqs[0];
+  useEffect(() => {
+    const mapped = reqsApi.data || [];
+    setRawReqs(mapped);
+    if (mapped.length > 0 && (!activeReqId || !mapped.some((r) => r.req_id_str === activeReqId))) {
+      setActiveReqId(mapped[0].req_id_str);
+      onSelectReq(mapped[0].req_id_str);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reqsApi.data]);
 
-  const handleApplyFix = (reqId: string) => {
-    if (!currentReq.suggestedRewrite) return;
-    setReqs((prev) =>
-      prev.map((r) => {
-        if (r.id === reqId && r.suggestedRewrite) {
-          return {
-            ...r,
-            originalText: r.suggestedRewrite,
-            status: 'Verified',
-            ambiguityScore: 92,
-            issues: [],
-          };
-        }
-        return r;
+  const reqs = useMemo(() => rawReqs.map(toRequirementItem), [rawReqs]);
+  const currentRaw = rawReqs.find((r) => r.req_id_str === activeReqId) || rawReqs[0];
+
+  // pending AI rewrite for the selected requirement
+  useEffect(() => {
+    setRec(null);
+    if (!currentRaw) return;
+    api.getRecommendationsForReq(currentRaw.id)
+      .then((list) => {
+        const pending = list.find(
+          (r) => r.status === 'pending' || r.status === 'needs_human_input');
+        if (pending) setRec(pending);
       })
-    );
-    setAppliedFixes((prev) => ({ ...prev, [reqId]: true }));
+      .catch(() => undefined);
+  }, [currentRaw?.id]);
+
+  const currentReq = currentRaw
+    ? {
+        ...toRequirementItem(currentRaw),
+        suggestedRewrite: rec?.proposed_text || undefined,
+      }
+    : (undefined as unknown as RequirementItem);
+
+  // acceptance criteria derived from extracted normalized constraints
+  const acceptanceCriteria: string[] = currentRaw
+    ? (currentRaw.constraints_json || []).map((c: any) =>
+        `${c.attribute} ${c.operator} ${Array.isArray(c.value) ? c.value.join(' – ') : c.value}${c.unit ? ' ' + c.unit : ''}`)
+    : [];
+  const missingInfo: string[] = currentRaw?.missing_information_json || [];
+
+  const handleApplyFix = async (reqId: string) => {
+    if (!rec?.proposed_text) return;
+    setBusy(true);
+    try {
+      await api.acceptRecommendation(rec.id);
+      setAppliedFixes((prev) => ({ ...prev, [reqId]: true }));
+      setRec(null);
+      await reqsApi.reload();
+    } catch (err) {
+      alert(`Apply failed: ${(err as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleAddCriteria = () => {
-    if (!customCriteriaInput.trim()) return;
-    setReqs((prev) =>
-      prev.map((r) => {
-        if (r.id === activeReqId) {
-          return {
-            ...r,
-            acceptanceCriteria: [...(r.acceptanceCriteria || []), customCriteriaInput.trim()],
-          };
-        }
-        return r;
-      })
-    );
+    // local-only note: acceptance criteria editing lands in a future
+    // milestone (criteria are derived from extracted constraints today)
     setCustomCriteriaInput('');
   };
 
@@ -85,6 +122,46 @@ export const RequirementsMatrixView: React.FC<RequirementsMatrixViewProps> = ({
       (statusFilter === 'verified' && r.status === 'Verified');
     return matchesSearch && matchesType && matchesStatus;
   });
+
+  if (reqsApi.loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] gap-3 text-on-surface-variant">
+        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        <span className="font-body-md text-body-md">Loading requirements…</span>
+      </div>
+    );
+  }
+  if (reqsApi.error) {
+    return (
+      <div className="m-6 p-5 rounded-xl bg-error-container/20 border border-error/40 flex flex-col gap-2">
+        <div className="flex items-center gap-2 text-error font-semibold"><AlertCircle className="w-5 h-5" /> {reqsApi.error}</div>
+        <button onClick={reqsApi.reload} className="mt-2 self-start h-8 px-3 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md">Retry</button>
+      </div>
+    );
+  }
+  if (!currentReq || !currentRaw) {
+    return (
+      <div className="px-6 py-10 max-w-7xl mx-auto w-full flex flex-col gap-3 items-center text-center">
+        <AlertCircle className="w-8 h-8 text-outline" />
+        <h2 className="font-headline-md text-headline-md text-on-surface font-semibold">No requirements yet</h2>
+        <p className="font-body-md text-body-md text-on-surface-variant">
+          {active ? `“${active.name}” has not been analyzed. Run an analysis to extract requirements.`
+                  : 'Create a project and upload an SRS document to get started.'}
+        </p>
+        {activeId && (
+          <button
+            onClick={() => api.analyzeProject(activeId)
+              .then(() => onNavigate('srs-progress'))
+              .catch((err) => alert(err.message))}
+            className="mt-2 h-9 px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold"
+          >
+            Run Analysis
+          </button>
+        )}
+      </div>
+    );
+  }
+
 
   return (
     <div className="flex flex-col w-full min-h-[calc(100vh-3.5rem)] animate-in fade-in duration-300">
@@ -108,29 +185,17 @@ export const RequirementsMatrixView: React.FC<RequirementsMatrixViewProps> = ({
             <SlidersHorizontal className="w-4 h-4 text-outline" />
             <span className="font-label-md text-label-md text-on-surface-variant">Lint Mode: Strict INCOSE</span>
           </div>
-          <button 
+          <button
             onClick={() => {
-              const newId = `REQ-0${reqs.length + 1}`;
-              const newReq: RequirementItem = {
-                id: newId,
-                title: 'New Custom Requirement Statement',
-                category: 'General',
-                type: 'functional',
-                status: 'Needs Review',
-                ambiguityScore: 50,
-                originalText: 'The system should process requests quickly.',
-                issues: [{ id: 'iss-new', type: 'Subjective Lexicon', description: 'Vague descriptor "quickly"', severity: 'high' }],
-                section: 'Section 1.0 General',
-                author: 'User',
-                lastUpdated: 'Just now',
-              };
-              setReqs([newReq, ...reqs]);
-              setActiveReqId(newId);
+              if (!activeId) return;
+              api.analyzeProject(activeId)
+                .then(() => onNavigate('srs-progress'))
+                .catch((err) => alert(err.message));
             }}
             className="bg-primary text-on-primary font-label-md text-label-md px-3.5 py-1.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm font-semibold"
           >
-            <Plus className="w-4 h-4" />
-            <span>New Specification</span>
+            <RefreshCw className="w-4 h-4" />
+            <span>Re-analyze Spec</span>
           </button>
         </div>
       </div>
@@ -341,7 +406,7 @@ export const RequirementsMatrixView: React.FC<RequirementsMatrixViewProps> = ({
                   <span>SpecSentinel AI Testable Rewrite Suggestion</span>
                 </div>
                 <span className="font-code-sm text-code-sm px-2 py-0.5 rounded bg-tertiary-container/20 text-tertiary font-semibold">
-                  +50 Score Boost
+                  {rec ? `${rec.predicted_score_delta >= 0 ? '+' : ''}${rec.predicted_score_delta} score delta (recomputed)` : 'recomputed delta'}
                 </span>
               </div>
 
@@ -350,20 +415,27 @@ export const RequirementsMatrixView: React.FC<RequirementsMatrixViewProps> = ({
               </p>
 
               <div className="flex items-center justify-between pt-1">
-                <span className="font-code-sm text-code-sm text-outline">Complies with INCOSE Rule 3.1 & 4.2</span>
+                <span className="font-code-sm text-code-sm text-outline">
+                  {missingInfo.length > 0
+                    ? `Missing: ${missingInfo.join(', ')}`
+                    : 'All required fields present'}
+                </span>
                 <button
                   onClick={() => handleApplyFix(currentReq.id)}
-                  disabled={appliedFixes[currentReq.id]}
+                  disabled={busy || appliedFixes[currentReq.id]}
                   className={`
                     px-4 py-1.5 rounded-lg text-label-md font-semibold flex items-center gap-2 transition-all shadow-sm
-                    ${appliedFixes[currentReq.id] 
-                      ? 'bg-tertiary-container/30 text-tertiary cursor-default' 
-                      : 'bg-primary text-on-primary hover:opacity-90 active:scale-95'
-                    }
+                    ${appliedFixes[currentReq.id]
+                      ? 'bg-tertiary-container/30 text-tertiary cursor-default'
+                      : 'bg-primary text-on-primary hover:opacity-90 active:scale-95'}
+                    ${busy ? 'opacity-60 cursor-wait' : ''}
                   `}
                 >
                   <Check className="w-4 h-4" />
-                  <span>{appliedFixes[currentReq.id] ? 'Fix Applied' : 'Apply Fix (Tab)'}</span>
+                  <span>
+                    {appliedFixes[currentReq.id] ? 'Fix Applied'
+                      : busy ? 'Applying…' : 'Apply Fix (Tab)'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -373,10 +445,21 @@ export const RequirementsMatrixView: React.FC<RequirementsMatrixViewProps> = ({
           <div className="flex flex-col gap-3 pt-2 border-t border-surface-container-high">
             <span className="font-label-caps text-label-caps uppercase text-outline">Verifiable Acceptance Criteria</span>
             <div className="flex flex-col gap-2">
-              {currentReq.acceptanceCriteria?.map((crit, idx) => (
+              {acceptanceCriteria.length === 0 && missingInfo.length === 0 && (
+                <span className="font-body-sm text-body-sm text-outline">
+                  No extracted constraints — add criteria below or re-run analysis.
+                </span>
+              )}
+              {acceptanceCriteria.map((crit, idx) => (
                 <div key={idx} className="flex items-center gap-2.5 font-body-sm text-body-sm text-on-surface bg-surface-container p-2.5 rounded-lg border border-surface-container-high">
                   <CheckCircle2 className="w-4 h-4 text-tertiary shrink-0" />
                   <span>{crit}</span>
+                </div>
+              ))}
+              {missingInfo.map((crit, idx) => (
+                <div key={`m-${idx}`} className="flex items-center gap-2.5 font-body-sm text-body-sm text-amber-300 bg-error-container/10 p-2.5 rounded-lg border border-amber-400/30">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>Missing: {crit}</span>
                 </div>
               ))}
             </div>

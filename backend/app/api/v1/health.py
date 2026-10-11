@@ -27,9 +27,14 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         await r.ping()
         await r.aclose()
     except Exception as e:
-        redis_status = f"error: {str(e)}"
+        # Redis is optional in the local-free profile (ADR-002):
+        # events run on the Postgres/SQLite analysis_events table.
+        redis_status = ("disabled (optional in local-free profile)"
+                        if settings.PROFILE == "local-free"
+                        else f"error: {str(e)}")
 
-    overall = "ok" if db_status == "ok" and redis_status == "ok" else "degraded"
+    overall = "ok" if db_status == "ok" and not redis_status.startswith("error") \
+        else "degraded"
     return HealthResponse(
         status=overall,
         database=db_status,
